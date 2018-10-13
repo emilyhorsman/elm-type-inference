@@ -56,6 +56,11 @@ recordValue =
     between (char '{') (char '}') $ sepBy recordMember (char ',')
 
 
+recordUpdate =
+    between (char '{') (char '}') $
+        liftM2 (,) (bindingName <* char '|') (sepBy recordMember (char ','))
+
+
 term = choice
     [ number
     , float
@@ -94,13 +99,33 @@ bindingName =
     alphaChar ++ (many alphaNumChar)
 
 
+-- TODO: This is an incorrect simplification.
+typeValue = choices
+    [ bindingName
+    , recordTypeValue
+    , tupleTypeValue
+    , listTypeValue
+    ]
+
+
+listTypeValue =
+    between (char '[') (char ']') typeAnnotation
+
+
+tupleTypeValue =
+    between (char '(') (char ')') (sepBy typeAnnotation (char ','))
+
+
+recordTypeValue =
+    between (char '{') (char '}') (sepBy typeAnnotation (char ','))
+
+
 -- TODO: type annotation can be support type -> type
 -- type must support record types { a : Float b, : Float }
 typeAnnotation = do
     name <- bindingName
     char ':'
-    -- This needs a lot more work, there will have to be a Type parser
-    annotation <- many anyChar
+    annotation <- sepBy typeValue (string "->")
     -- TODO: This needs a type, actually maybe it doesn't because we could have
     -- a dictionary built from a list of tuples
     return (name, annotation)
@@ -114,4 +139,16 @@ functionDefinition = do
     return (name, args)
 
 
--- TODO: case
+tupleValue =
+    between (char '(') (char ')') (sepBy term (char ','))
+
+
+{-
+TODO:
+* case (context-sensitive grammar)
+* Pattern matching on tuples, records, lists
+    * Pattern matching is gonna be fun to do inference on…
+* Function application
+* Infix function application
+* Built-in unary (-) and binary operators
+-}
