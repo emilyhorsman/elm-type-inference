@@ -45,12 +45,26 @@ singleChar =
         surround = char '\''
 
 
+recordMember = do
+    memberKey <- bindingName
+    char '='
+    memberValue <- term
+    return (memberKey, memberValue)
+
+
+recordValue =
+    between (char '{') (char '}') $ sepBy recordMember (char ',')
+
+
 term = choice
     [ number
     , float
     , singleQuotedString
     , multiLineString
     , singleChar
+    , recordValue
+    , list
+    , conditional
     ]
 
 
@@ -75,10 +89,13 @@ conditional = do
 
 
 -- Function (possibly nullary) name or let binding name
+-- Should support special cases like +, ++?
 bindingName =
     alphaChar ++ (many alphaNumChar)
 
 
+-- TODO: type annotation can be support type -> type
+-- type must support record types { a : Float b, : Float }
 typeAnnotation = do
     name <- bindingName
     char ':'
@@ -87,3 +104,14 @@ typeAnnotation = do
     -- TODO: This needs a type, actually maybe it doesn't because we could have
     -- a dictionary built from a list of tuples
     return (name, annotation)
+
+
+functionDefinition = do
+    name <- bindingName
+    char ' '
+    -- TODO: Pattern matching support
+    args <- (sepBy bindingName (char ' '))
+    return (name, args)
+
+
+-- TODO: case
