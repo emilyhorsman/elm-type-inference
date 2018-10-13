@@ -151,4 +151,6 @@ TODO:
 * Function application
 * Infix function application
 * Built-in unary (-) and binary operators
+* Field access
+* Modules
 -}
