@@ -34,3 +34,20 @@ main = hspec $ do
 
         it "fails on unescaped quote" $ do
             parse singleChar "" `shouldFailOn` "'''"
+
+    describe "singleLineString" $ do
+        it "returns string" $ do
+            parse singleLineString "" "\"Hello\"" `shouldParse` "Hello"
+
+        it "returns string with escape sequences" $ do
+            parse singleLineString "" "\"Hello\\n\"" `shouldParse` "Hello\n"
+            parse singleLineString "" "\"Hello\\\"\"" `shouldParse` "Hello\""
+            parse singleLineString "" "\" \\t \\r \\n \"" `shouldParse` " \t \r \n "
+
+        it "cannot have a newline" $ do
+            parse singleLineString "" `shouldFailOn` "Hello\nGoodbye"
+            parse singleLineString "" `shouldFailOn` "Hello\rGoodbye"
+
+    describe "multiLineString" $ do
+        it "returns string" $ do
+            parse multiLineString "" "\"\"\"Hello\nGoodbye\"\"\"" `shouldParse` "Hello\nGoodbye"

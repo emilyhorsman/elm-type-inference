@@ -4,6 +4,8 @@ import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
+import Utility
+
 
 type Parser = Parsec Void String
 
@@ -27,9 +29,18 @@ escapedChar = choice
 
 singleChar :: Parser Char
 singleChar =
-    between surround surround $
+    surroundedBy (char '\'') $
         (char '\\' >> escapedChar) <|> noneOf "'\\"
+
+
+singleLineString :: Parser String
+singleLineString =
+    surroundedBy (char '"') $
+        many $ (char '\\' >> escapedChar) <|> noneOf "\"\\\r\n"
+
+
+multiLineString :: Parser String
+multiLineString =
+    surround >> manyTill ((char '\\' >> escapedChar) <|> noneOf "\\") surround
     where
-        surround = char '\''
-
-
+        surround = count 3 (char '"')
