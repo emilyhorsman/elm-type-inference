@@ -13,14 +13,22 @@ bool =
     True <$ string "True" <|> False <$ string "False"
 
 
-escapedSingleQuote :: Parser Char
-escapedSingleQuote =
-    '\'' <$ string "\\'"
+-- TODO: #1 Handle Unicode code point \u{03BB}
+escapedChar :: Parser Char
+escapedChar = choice
+    [ '\n' <$ char 'n'
+    , '\r' <$ char 'r'
+    , '\t' <$ char 't'
+    , '"' <$ char '"'
+    , '\'' <$ char '\''
+    , '\\' <$ char '\\'
+    ] <?> "valid escape sequence: \\n, \\r, \\t, \\\", \\', \\\\"
 
 
 singleChar :: Parser Char
 singleChar =
-    between surround surround $ try escapedSingleQuote <|> noneOf "'"
+    between surround surround $
+        (char '\\' >> escapedChar) <|> noneOf "'\\"
     where
         surround = char '\''
 
