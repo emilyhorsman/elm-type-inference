@@ -12,6 +12,7 @@ main = hspec $ do
     describe "bool" $ do
         it "returns True" $ do
             parse bool "" "True" `shouldParse` True
+            parse (Bool <$> bool) "" "True" `shouldParse` (Bool True)
 
         it "returns False" $ do
             parse bool "" "False" `shouldParse` False
@@ -64,3 +65,13 @@ main = hspec $ do
 
         it "accepts list of numbers" $ do
             parse (sepBy numberLiteral (char ',')) "" "4,4" `shouldParse` [4,4]
+
+    describe "identifier" $ do
+        it "fails on reserved word" $ do
+            parse identifier "" `shouldFailOn` "if"
+
+        it "must start with lowercase letter" $ do
+            parse identifier "" `shouldFailOn` "Variable"
+
+        it "accepts identifier" $ do
+            parse identifier "" "foobar " `shouldParse` "foobar"

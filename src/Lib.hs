@@ -15,6 +15,15 @@ import Utility
 type Parser = Parsec Void String
 
 
+data Term
+    = Char Char
+    | String String
+    | Int Int
+    | Float Double
+    | Bool Bool
+    deriving (Show, Eq)
+
+
 -- Adhering to the convention suggested by Text.Megaparsec.Char.Lexer where
 -- lexeme parsers assume no space leading a lexeme and consumes all trailing space.
 --
@@ -57,6 +66,23 @@ reservedWords =
         ]
 
 
+identifierLeadingChar = lowerChar
+identifierChar = alphaNumChar
+
+
+identifier :: Parser String
+identifier =
+    let
+        parser =
+            (:) <$> identifierLeadingChar <*> many identifierChar
+        failIfReservedWord word =
+            if word `Set.member` reservedWords
+               then fail $ "keyword " ++ word ++ " is a reserved word and cannot be an identifier"
+               else return word
+    in
+        (lexeme . try) (parser >>= failIfReservedWord)
+
+
 -- I don't think we want this to be polymorphic (i.e., Parser Integral a).
 -- This parser is not quite what we want, either. It currently will accept "4."
 -- or even "4a" (and just parse it as 4). This will need to be figured out
@@ -64,7 +90,7 @@ reservedWords =
 -- of failing.
 --
 -- parse (sepBy numberLiteral (char ',')) "" `shouldFailOn` "4a,4"
-numberLiteral :: Parser Integer
+numberLiteral :: Parser Int
 numberLiteral = L.decimal
 
 
