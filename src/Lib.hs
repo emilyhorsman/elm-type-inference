@@ -2,16 +2,59 @@ module Lib where
 
 import Data.Char (isDigit)
 import Data.Maybe (fromMaybe)
+import qualified Data.Set as Set
 import Data.Void
 import Numeric (readDec)
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import Text.Megaparsec.Char.Lexer (decimal, float)
+import qualified Text.Megaparsec.Char.Lexer as L
 
 import Utility
 
 
 type Parser = Parsec Void String
+
+
+-- Adhering to the convention suggested by Text.Megaparsec.Char.Lexer where
+-- lexeme parsers assume no space leading a lexeme and consumes all trailing space.
+--
+-- General lexer method here is based on [1] and megaparsec docs.
+-- [1] https://markkarpov.com/megaparsec/parsing-simple-imperative-language.html
+spaceConsumer :: Parser ()
+spaceConsumer =
+    let
+        lineComment =
+            L.skipLineComment "--"
+        blockComment =
+            L.skipBlockCommentNested "{-" "-}"
+    in
+        L.space space1 lineComment blockComment
+
+
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme spaceConsumer
+
+
+symbol = L.symbol spaceConsumer
+
+
+reservedWords =
+    Set.fromList
+        [ "as"
+        , "case"
+        , "else"
+        , "exposing"
+        , "if"
+        , "import"
+        , "in"
+        , "let"
+        , "module"
+        , "of"
+        , "port"
+        , "then"
+        , "type"
+        , "where"
+        ]
 
 
 -- I don't think we want this to be polymorphic (i.e., Parser Integral a).
@@ -22,11 +65,11 @@ type Parser = Parsec Void String
 --
 -- parse (sepBy numberLiteral (char ',')) "" `shouldFailOn` "4a,4"
 numberLiteral :: Parser Integer
-numberLiteral = decimal
+numberLiteral = L.decimal
 
 
 floatLiteral :: Parser Float
-floatLiteral = float
+floatLiteral = L.float
 
 
 bool :: Parser Bool
