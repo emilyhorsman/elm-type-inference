@@ -1,6 +1,8 @@
+import Control.Monad (liftM2)
 import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
+import Text.Megaparsec.Char
 
 import Lib
 
@@ -51,3 +53,14 @@ main = hspec $ do
     describe "multiLineString" $ do
         it "returns string" $ do
             parse multiLineString "" "\"\"\"Hello\nGoodbye\"\"\"" `shouldParse` "Hello\nGoodbye"
+
+    describe "numberLiteral" $ do
+        it "returns number" $ do
+            parse numberLiteral "" "42" `shouldParse` 42
+            parse (liftM2 (,) numberLiteral (char '.')) "" "42." `shouldParse` (42, '.')
+
+        it "fails on sign" $ do
+            parse numberLiteral "" `shouldFailOn` "-4"
+
+        it "accepts list of numbers" $ do
+            parse (sepBy numberLiteral (char ',')) "" "4,4" `shouldParse` [4,4]
