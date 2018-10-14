@@ -20,6 +20,7 @@ description:         Please see the README on GitHub at <https://github.com/emil
 
 dependencies:
 - base >= 4.7 && < 5
+- megaparsec >= 7.0.1 && < 7.1
 
 library:
   source-dirs: src
@@ -45,3 +46,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - elm-type-inference
+    - hspec >= 2.5.5 && < 3
+    - hspec-megaparsec >= 2.0.0 && < 3
