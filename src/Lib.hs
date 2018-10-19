@@ -24,6 +24,16 @@ data Term
     deriving (Show, Eq)
 
 
+data Expression
+    = Unit Term
+    deriving (Show, Eq)
+
+
+data Function
+    = BoundFunctionDefinition String [String] Expression
+    deriving (Show, Eq)
+
+
 -- Adhering to the convention suggested by Text.Megaparsec.Char.Lexer where
 -- lexeme parsers assume no space leading a lexeme and consumes all trailing space.
 --
@@ -81,6 +91,17 @@ identifier =
                else return word
     in
         (lexeme . try) (parser >>= failIfReservedWord)
+
+
+function :: Parser Function
+function = do
+    bindingName <- identifier
+    -- TODO: Arguments.
+    symbol "="
+    -- TODO expression parser which then aggregates terms
+    expr <- numberLiteral
+    return $ BoundFunctionDefinition bindingName [] $ Unit (Int expr)
+
 
 
 -- I don't think we want this to be polymorphic (i.e., Parser Integral a).

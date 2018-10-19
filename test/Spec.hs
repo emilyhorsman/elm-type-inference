@@ -75,3 +75,7 @@ main = hspec $ do
 
         it "accepts identifier" $ do
             parse identifier "" "foobar " `shouldParse` "foobar"
+
+    describe "function" $ do
+        it "parses a simple function" $ do
+            parse function "" "x = 1" `shouldParse` (BoundFunctionDefinition "x" [] (Unit (Int 1)))
