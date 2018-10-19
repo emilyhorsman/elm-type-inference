@@ -15,17 +15,12 @@ import Utility
 type Parser = Parsec Void String
 
 
-data Term
+data Expression
     = Char Char
     | String String
     | Int Int
     | Float Double
     | Bool Bool
-    deriving (Show, Eq)
-
-
-data Expression
-    = Unit Term
     deriving (Show, Eq)
 
 
@@ -100,7 +95,7 @@ function = do
     symbol "="
     -- TODO expression parser which then aggregates terms
     expr <- numberLiteral
-    return $ BoundFunctionDefinition bindingName [] $ Unit (Int expr)
+    return $ BoundFunctionDefinition bindingName [] $ Int expr
 
 
 

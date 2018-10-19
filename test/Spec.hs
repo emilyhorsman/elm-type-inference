@@ -78,4 +78,4 @@ main = hspec $ do
 
     describe "function" $ do
         it "parses a simple function" $ do
-            parse function "" "x = 1" `shouldParse` (BoundFunctionDefinition "x" [] (Unit (Int 1)))
+            parse function "" "x = 1" `shouldParse` (BoundFunctionDefinition "x" [] (Int 1))
