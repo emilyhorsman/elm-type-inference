@@ -131,7 +131,7 @@ numberWrapper = do
 
 bool :: Parser Bool
 bool =
-    True <$ string "True" <|> False <$ string "False"
+    True <$ symbol "True" <|> False <$ symbol "False"
 
 
 -- TODO: #1 Handle Unicode code point \u{03BB}
