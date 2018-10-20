@@ -89,6 +89,20 @@ main = hspec $ do
         it "fails on trailing ." $
             parse numberWrapper "" `shouldFailOn` "4."
 
+    describe "listLiteral" $ do
+        it "parses an empty list" $
+            parse listLiteral "" "[]" `shouldParse` []
+
+        it "parses a list of bools" $
+            parse listLiteral "" "[ True, False, True ]" `shouldParse` [Bool True, Bool False, Bool True]
+
+        it "parses a list of numbers" $ do
+            parse listLiteral "" "[1, 2, 3]" `shouldParse` [Int 1, Int 2, Int 3]
+            parse listLiteral "" "[1.0, 2.0, 3.0]" `shouldParse` [Float 1, Float 2, Float 3]
+
+        it "fails when member fails" $
+            parse listLiteral "" `shouldFailOn` "[4.]"
+
     describe "function" $ do
         it "parses a simple nullary function" $ do
             parse function "" "x = \"hello\"" `shouldParse` BoundFunctionDefinition "x" [] (String "hello")

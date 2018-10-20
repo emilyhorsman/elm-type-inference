@@ -21,6 +21,7 @@ data Expression
     | Int Int
     | Float Float
     | Bool Bool
+    | List [Expression]
     deriving (Show, Eq)
 
 
@@ -97,7 +98,13 @@ expression =
         , Char <$> singleChar
         , String <$> singleLineString
         , String <$> multiLineString
+        , List <$> listLiteral
         ]
+
+
+listLiteral :: Parser [Expression]
+listLiteral =
+    between (symbol "[") (symbol "]") $ expression `sepBy` symbol ","
 
 
 function :: Parser Function
