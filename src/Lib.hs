@@ -123,7 +123,6 @@ floatLiteral = L.float
 numberWrapper :: Parser Expression
 numberWrapper = do
     -- Trailing floating points are not allowed in Elm. i.e., `4.`
-    notFollowedBy (char '.' >> eof)
     candidate <- getInput
     if '.' `elem` candidate
         then Float <$> floatLiteral
