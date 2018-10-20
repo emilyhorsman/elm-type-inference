@@ -105,8 +105,7 @@ function = do
     bindingName <- identifier
     arguments <- many identifier
     symbol "="
-    expr <- expression
-    return $ BoundFunctionDefinition bindingName arguments expr
+    BoundFunctionDefinition bindingName arguments <$> expression
 
 
 numberLiteral :: Parser Int
@@ -163,5 +162,5 @@ singleLineString =
 multiLineString :: Parser String
 multiLineString =
     surround >> manyTill (escapedChar <|> noneOf "\\") surround
-    where
-        surround = count 3 (char '"')
+  where
+    surround = count 3 (char '"')

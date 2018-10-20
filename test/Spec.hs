@@ -10,14 +10,13 @@ import Lib
 main :: IO ()
 main = hspec $ do
     describe "bool" $ do
-        it "returns True" $ do
+        it "returns True" $
             parse bool "" "True" `shouldParse` True
-            parse (Bool <$> bool) "" "True" `shouldParse` (Bool True)
 
-        it "returns False" $ do
+        it "returns False" $
             parse bool "" "False" `shouldParse` False
 
-        it "fails" $ do
+        it "fails" $
             parse bool "" `shouldFailOn` "not a bool!"
 
     describe "singleChar" $ do
@@ -29,17 +28,17 @@ main = hspec $ do
             parse singleChar "" "'\\''" `shouldParse` '\''
             parse singleChar "" "'\\\\'" `shouldParse` '\\'
 
-        it "returns char" $ do
+        it "returns char" $
             parse singleChar "" "'a'" `shouldParse` 'a'
 
-        it "fails on invalid escape sequence" $ do
+        it "fails on invalid escape sequence" $
             parse singleChar "" `shouldFailOn` "'\\a'"
 
-        it "fails on unescaped quote" $ do
+        it "fails on unescaped quote" $
             parse singleChar "" `shouldFailOn` "'''"
 
     describe "singleLineString" $ do
-        it "returns string" $ do
+        it "returns string" $
             parse singleLineString "" "\"Hello\"" `shouldParse` "Hello"
 
         it "returns string with escape sequences" $ do
@@ -51,8 +50,8 @@ main = hspec $ do
             parse singleLineString "" `shouldFailOn` "Hello\nGoodbye"
             parse singleLineString "" `shouldFailOn` "Hello\rGoodbye"
 
-    describe "multiLineString" $ do
-        it "returns string" $ do
+    describe "multiLineString" $
+        it "returns string" $
             parse multiLineString "" "\"\"\"Hello\nGoodbye\"\"\"" `shouldParse` "Hello\nGoodbye"
 
     describe "numberLiteral" $ do
@@ -60,43 +59,43 @@ main = hspec $ do
             parse numberLiteral "" "42" `shouldParse` 42
             parse (liftM2 (,) numberLiteral (char '.')) "" "42." `shouldParse` (42, '.')
 
-        it "fails on sign" $ do
+        it "fails on sign" $
             parse numberLiteral "" `shouldFailOn` "-4"
 
-        it "accepts list of numbers" $ do
+        it "accepts list of numbers" $
             parse (sepBy numberLiteral (char ',')) "" "4,4" `shouldParse` [4,4]
 
-    describe "floatLiteral" $ do
-        it "returns float" $ do
+    describe "floatLiteral" $
+        it "returns float" $
             parse floatLiteral "" "4.5" `shouldParse` 4.5
 
     describe "identifier" $ do
-        it "fails on reserved word" $ do
+        it "fails on reserved word" $
             parse identifier "" `shouldFailOn` "if"
 
-        it "must start with lowercase letter" $ do
+        it "must start with lowercase letter" $
             parse identifier "" `shouldFailOn` "Variable"
 
-        it "accepts identifier" $ do
+        it "accepts identifier" $
             parse identifier "" "foobar " `shouldParse` "foobar"
 
     describe "numberWrapper" $ do
-        it "returns float" $ do
+        it "returns float" $
             parse numberWrapper "" "4.5" `shouldParse` Float 4.5
 
-        it "returns int" $ do
+        it "returns int" $
             parse numberWrapper "" "4" `shouldParse` Int 4
 
-        it "fails on trailing ." $ do
+        it "fails on trailing ." $
             parse numberWrapper "" `shouldFailOn` "4."
 
     describe "function" $ do
         it "parses a simple nullary function" $ do
-            parse function "" "x = \"hello\"" `shouldParse` (BoundFunctionDefinition "x" [] (String "hello"))
-            parse function "" "x = 'c'" `shouldParse` (BoundFunctionDefinition "x" [] (Char 'c'))
-            parse function "" "x = True" `shouldParse` (BoundFunctionDefinition "x" [] (Bool True))
-            parse function "" "x = 1" `shouldParse` (BoundFunctionDefinition "x" [] (Int 1))
-            parse function "" "x = 1.5" `shouldParse` (BoundFunctionDefinition "x" [] (Float 1.5))
+            parse function "" "x = \"hello\"" `shouldParse` BoundFunctionDefinition "x" [] (String "hello")
+            parse function "" "x = 'c'" `shouldParse` BoundFunctionDefinition "x" [] (Char 'c')
+            parse function "" "x = True" `shouldParse` BoundFunctionDefinition "x" [] (Bool True)
+            parse function "" "x = 1" `shouldParse` BoundFunctionDefinition "x" [] (Int 1)
+            parse function "" "x = 1.5" `shouldParse` BoundFunctionDefinition "x" [] (Float 1.5)
 
-        it "parses a simple ternary function" $ do
-            parse function "" "x a b c = 1" `shouldParse` (BoundFunctionDefinition "x" ["a", "b", "c"] (Int 1))
+        it "parses a simple ternary function" $
+            parse function "" "x a b c = 1" `shouldParse` BoundFunctionDefinition "x" ["a", "b", "c"] (Int 1)
