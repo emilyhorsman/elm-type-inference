@@ -99,3 +99,6 @@ main = hspec $ do
 
         it "parses a simple ternary function" $
             parse function "" "x a b c = 1" `shouldParse` BoundFunctionDefinition "x" ["a", "b", "c"] (Int 1)
+
+        it "fails on invalid parameter names" $
+            parse function "" `shouldFailOn` "x 1 = 1"
