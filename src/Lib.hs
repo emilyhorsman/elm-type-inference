@@ -19,7 +19,7 @@ data Expression
     = Char Char
     | String String
     | Int Int
-    | Float Double
+    | Float Float
     | Bool Bool
     deriving (Show, Eq)
 
