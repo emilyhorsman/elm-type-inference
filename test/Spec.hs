@@ -80,15 +80,15 @@ main = hspec $ do
         it "accepts identifier" $ do
             parse identifier "" "foobar " `shouldParse` "foobar"
 
-    describe "eitherNumberLiteral" $ do
+    describe "numberWrapper" $ do
         it "returns float" $ do
-            parse eitherNumberLiteral "" "4.5" `shouldParse` Float 4.5
+            parse numberWrapper "" "4.5" `shouldParse` Float 4.5
 
         it "returns int" $ do
-            parse eitherNumberLiteral "" "4" `shouldParse` Int 4
+            parse numberWrapper "" "4" `shouldParse` Int 4
 
         it "fails on trailing ." $ do
-            parse eitherNumberLiteral "" `shouldFailOn` "4."
+            parse numberWrapper "" `shouldFailOn` "4."
 
     describe "function" $ do
         it "parses a simple function" $ do

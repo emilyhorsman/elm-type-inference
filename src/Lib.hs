@@ -92,7 +92,7 @@ identifier =
 expression :: Parser Expression
 expression =
     choice
-        [ eitherNumberLiteral
+        [ numberWrapper
         , Bool <$> bool
         , Char <$> singleChar
         , String <$> singleLineString
@@ -122,8 +122,8 @@ floatLiteral = L.float
 -- they erroneously accept values such as `4.` or `4a` and return 4.
 --
 -- There might be a better way of doing this?
-eitherNumberLiteral :: Parser Expression
-eitherNumberLiteral = do
+numberWrapper :: Parser Expression
+numberWrapper = do
     -- Trailing floating points are not allowed in Elm. i.e., `4.`
     notFollowedBy (char '.' >> eof)
     candidate <- getInput
