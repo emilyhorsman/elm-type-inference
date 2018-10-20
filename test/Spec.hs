@@ -18,7 +18,7 @@ main = hspec $ do
             parse bool "" "False" `shouldParse` False
 
         it "fails" $ do
-            parse bool "" `shouldFailOn` "asdf"
+            parse bool "" `shouldFailOn` "not a bool!"
 
     describe "singleChar" $ do
         it "returns escaped char" $ do
