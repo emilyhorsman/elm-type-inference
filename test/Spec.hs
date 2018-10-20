@@ -103,6 +103,20 @@ main = hspec $ do
         it "fails when member fails" $
             parse listLiteral "" `shouldFailOn` "[4.]"
 
+    describe "tupleLiteral" $ do
+        it "parses an empty tuple" $
+            parse tupleLiteral "" "()" `shouldParse` []
+
+        it "parses a tuple of bools" $
+            parse tupleLiteral "" "( True, False )" `shouldParse` [Bool True, Bool False]
+
+    describe "expression" $ do
+        it "parses a nested tuple" $
+            parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
+
+        it "parses a nested list" $
+            parse expression "" "[[[True], [False]]]" `shouldParse` List [List [List [Bool True], List [Bool False]]]
+
     describe "function" $ do
         it "parses a simple nullary function" $ do
             parse function "" "x = \"hello\"" `shouldParse` BoundFunctionDefinition "x" [] (String "hello")

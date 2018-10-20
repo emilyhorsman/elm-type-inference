@@ -22,6 +22,7 @@ data Expression
     | Float Float
     | Bool Bool
     | List [Expression]
+    | Tuple [Expression]
     deriving (Show, Eq)
 
 
@@ -99,12 +100,23 @@ expression =
         , String <$> singleLineString
         , String <$> multiLineString
         , List <$> listLiteral
+        , Tuple <$> tupleLiteral
         ]
+
+
+commaSeparatedExpressions :: String -> String -> Parser [Expression]
+commaSeparatedExpressions left right =
+    between (symbol left) (symbol right) $ expression `sepBy` symbol ","
 
 
 listLiteral :: Parser [Expression]
 listLiteral =
-    between (symbol "[") (symbol "]") $ expression `sepBy` symbol ","
+    commaSeparatedExpressions "[" "]"
+
+
+tupleLiteral :: Parser [Expression]
+tupleLiteral =
+    commaSeparatedExpressions "(" ")"
 
 
 function :: Parser Function
