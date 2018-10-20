@@ -66,6 +66,10 @@ main = hspec $ do
         it "accepts list of numbers" $ do
             parse (sepBy numberLiteral (char ',')) "" "4,4" `shouldParse` [4,4]
 
+    describe "floatLiteral" $ do
+        it "returns float" $ do
+            parse floatLiteral "" "4.5" `shouldParse` 4.5
+
     describe "identifier" $ do
         it "fails on reserved word" $ do
             parse identifier "" `shouldFailOn` "if"
@@ -76,6 +80,20 @@ main = hspec $ do
         it "accepts identifier" $ do
             parse identifier "" "foobar " `shouldParse` "foobar"
 
+    describe "eitherNumberLiteral" $ do
+        it "returns float" $ do
+            parse eitherNumberLiteral "" "4.5" `shouldParse` Float 4.5
+
+        it "returns int" $ do
+            parse eitherNumberLiteral "" "4" `shouldParse` Int 4
+
+        it "fails on trailing ." $ do
+            parse eitherNumberLiteral "" `shouldFailOn` "4."
+
     describe "function" $ do
         it "parses a simple function" $ do
+            parse function "" "x = \"hello\"" `shouldParse` (BoundFunctionDefinition "x" [] (String "hello"))
+            parse function "" "x = 'c'" `shouldParse` (BoundFunctionDefinition "x" [] (Char 'c'))
+            parse function "" "x = True" `shouldParse` (BoundFunctionDefinition "x" [] (Bool True))
             parse function "" "x = 1" `shouldParse` (BoundFunctionDefinition "x" [] (Int 1))
+            parse function "" "x = 1.5" `shouldParse` (BoundFunctionDefinition "x" [] (Float 1.5))

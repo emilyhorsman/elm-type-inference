@@ -88,30 +88,48 @@ identifier =
         (lexeme . try) (parser >>= failIfReservedWord)
 
 
+-- TODO: Remember Control.Monad.Combinators.Expr
+expression :: Parser Expression
+expression =
+    choice
+        [ eitherNumberLiteral
+        , Bool <$> bool
+        , Char <$> singleChar
+        , String <$> singleLineString
+        , String <$> multiLineString
+        ]
+
+
 function :: Parser Function
 function = do
     bindingName <- identifier
     -- TODO: Arguments.
     symbol "="
     -- TODO expression parser which then aggregates terms
-    expr <- numberLiteral
-    return $ BoundFunctionDefinition bindingName [] $ Int expr
+    expr <- expression
+    return $ BoundFunctionDefinition bindingName [] expr
 
 
-
--- I don't think we want this to be polymorphic (i.e., Parser Integral a).
--- This parser is not quite what we want, either. It currently will accept "4."
--- or even "4a" (and just parse it as 4). This will need to be figured out
--- elsewhere. Currently something like the following would return [4] instead
--- of failing.
---
--- parse (sepBy numberLiteral (char ',')) "" `shouldFailOn` "4a,4"
 numberLiteral :: Parser Int
 numberLiteral = L.decimal
 
 
 floatLiteral :: Parser Float
 floatLiteral = L.float
+
+
+-- We should always use this instead of numberLiteral and floatLiteral because
+-- they erroneously accept values such as `4.` or `4a` and return 4.
+--
+-- There might be a better way of doing this?
+eitherNumberLiteral :: Parser Expression
+eitherNumberLiteral = do
+    -- Trailing floating points are not allowed in Elm. i.e., `4.`
+    notFollowedBy (char '.' >> eof)
+    candidate <- getInput
+    if '.' `elem` candidate
+        then Float <$> floatLiteral
+        else Int <$> numberLiteral
 
 
 bool :: Parser Bool
