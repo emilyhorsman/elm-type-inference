@@ -91,9 +91,12 @@ main = hspec $ do
             parse numberWrapper "" `shouldFailOn` "4."
 
     describe "function" $ do
-        it "parses a simple function" $ do
+        it "parses a simple nullary function" $ do
             parse function "" "x = \"hello\"" `shouldParse` (BoundFunctionDefinition "x" [] (String "hello"))
             parse function "" "x = 'c'" `shouldParse` (BoundFunctionDefinition "x" [] (Char 'c'))
             parse function "" "x = True" `shouldParse` (BoundFunctionDefinition "x" [] (Bool True))
             parse function "" "x = 1" `shouldParse` (BoundFunctionDefinition "x" [] (Int 1))
             parse function "" "x = 1.5" `shouldParse` (BoundFunctionDefinition "x" [] (Float 1.5))
+
+        it "parses a simple ternary function" $ do
+            parse function "" "x a b c = 1" `shouldParse` (BoundFunctionDefinition "x" ["a", "b", "c"] (Int 1))

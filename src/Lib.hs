@@ -103,11 +103,10 @@ expression =
 function :: Parser Function
 function = do
     bindingName <- identifier
-    -- TODO: Arguments.
+    arguments <- many identifier
     symbol "="
-    -- TODO expression parser which then aggregates terms
     expr <- expression
-    return $ BoundFunctionDefinition bindingName [] expr
+    return $ BoundFunctionDefinition bindingName arguments expr
 
 
 numberLiteral :: Parser Int
