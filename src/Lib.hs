@@ -114,6 +114,7 @@ listLiteral =
     commaSeparatedExpressions "[" "]"
 
 
+-- TODO: #2 Tuples cannot have a single member.
 tupleLiteral :: Parser [Expression]
 tupleLiteral =
     commaSeparatedExpressions "(" ")"
