@@ -24,6 +24,7 @@ data Expression
     | List [Expression]
     | Tuple [Expression]
     | If Expression Expression Expression
+    | FunctionApplication String [Expression]
     deriving (Show, Eq)
 
 
@@ -103,6 +104,7 @@ expression =
         , List <$> listLiteral
         , Tuple <$> tupleLiteral
         , ifExpression
+        , functionApplication
         ]
 
 
@@ -135,9 +137,15 @@ tupleLiteral =
 function :: Parser Function
 function = do
     bindingName <- identifier
-    arguments <- many identifier
+    parameters <- many identifier
     symbol "="
-    BoundFunctionDefinition bindingName arguments <$> expression
+    BoundFunctionDefinition bindingName parameters <$> expression
+
+
+functionApplication :: Parser Expression
+functionApplication = do
+    bindingName <- identifier
+    FunctionApplication bindingName <$> many expression
 
 
 numberLiteral :: Parser Int

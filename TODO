@@ -1,7 +1,7 @@
 === Grammar without type annotations ===
 
 - [*] if expressions
-- [ ] Function application
+- [*] Function application
 - [ ] Record values
 - [ ] Record updating
 - [ ] Record accessors

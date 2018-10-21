@@ -124,13 +124,6 @@ main = hspec $ do
         it "parses a nested false result" $
             parse ifExpression "" "if True then 0 else if True then 1 else 2" `shouldParse` If (Bool True) (Int 0) (If (Bool True) (Int 1) (Int 2))
 
-    describe "expression" $ do
-        it "parses a nested tuple" $
-            parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
-
-        it "parses a nested list" $
-            parse expression "" "[[[True], [False]]]" `shouldParse` List [List [List [Bool True], List [Bool False]]]
-
     describe "function" $ do
         it "parses a simple nullary function" $ do
             parse function "" "x = \"hello\"" `shouldParse` BoundFunctionDefinition "x" [] (String "hello")
@@ -144,3 +137,20 @@ main = hspec $ do
 
         it "fails on invalid parameter names" $
             parse function "" `shouldFailOn` "x 1 = 1"
+
+    describe "function application" $ do
+        it "applies a nullary function" $
+            parse functionApplication "" "x" `shouldParse` FunctionApplication "x" []
+
+        it "uses juxtaposition for argument application" $
+            parse functionApplication "" "x 1 2 3" `shouldParse` FunctionApplication "x" [Int 1, Int 2, Int 3]
+
+    describe "expression" $ do
+        it "parses a nested tuple" $
+            parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
+
+        it "parses a nested list" $
+            parse expression "" "[[[True], [False]]]" `shouldParse` List [List [List [Bool True], List [Bool False]]]
+
+        it "parses function application in the predicate of an if statement" $
+            parse expression "" "if x 1 then 1 else 0" `shouldParse` If (FunctionApplication "x" [Int 1]) (Int 1) (Int 0)
