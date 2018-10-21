@@ -25,6 +25,9 @@ data Expression
     | Tuple [Expression]
     | If Expression Expression Expression
     | FunctionApplication String [Expression]
+    -- This should not be a constructor for Function since it is an expression.
+    -- TODO: This comment is an undernuanced view.
+    | AnonymousFunction [String] Expression
     deriving (Show, Eq)
 
 
@@ -105,6 +108,7 @@ expression =
         , Tuple <$> tupleLiteral
         , ifExpression
         , functionApplication
+        , anonymousFunction
         ]
 
 
@@ -146,6 +150,14 @@ functionApplication :: Parser Expression
 functionApplication = do
     bindingName <- identifier
     FunctionApplication bindingName <$> many expression
+
+
+anonymousFunction :: Parser Expression
+anonymousFunction = do
+    symbol "\\"
+    parameters <- some $ identifier <|> symbol "_"
+    symbol "->"
+    AnonymousFunction parameters <$> expression
 
 
 numberLiteral :: Parser Int

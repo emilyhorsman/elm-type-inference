@@ -2,6 +2,7 @@
 
 - [*] if expressions
 - [*] Function application
+- [*] Lambdas
 - [ ] Record values
 - [ ] Record updating
 - [ ] Record accessors
@@ -11,10 +12,12 @@
     - [ ] cons
     - [ ] append
 - [ ] Let expressions
-- [ ] Lambdas
 - [ ] case expression
 - [ ] Operator references (e.g., `lessThan = (<)`)
 - [ ] Pattern matching
+- [ ] Function application from ``lvalue'' expression
+    - [ ] `(if True then f else g) arg`
+    - [ ] `(\x -> x + 1) arg`
 - [ ] Modules
 - [ ] Imports
 - [ ] Program of top-level functions

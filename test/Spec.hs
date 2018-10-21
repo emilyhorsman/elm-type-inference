@@ -145,6 +145,13 @@ main = hspec $ do
         it "uses juxtaposition for argument application" $
             parse functionApplication "" "x 1 2 3" `shouldParse` FunctionApplication "x" [Int 1, Int 2, Int 3]
 
+    describe "anonymousFunction" $ do
+        it "parses an anonymous function expression" $
+            parse anonymousFunction "" "\\a -> 1" `shouldParse` AnonymousFunction ["a"] (Int 1)
+
+        it "parses underscores for parameters" $
+            parse anonymousFunction "" "\\_ a _ -> 1" `shouldParse` AnonymousFunction ["_", "a", "_"] (Int 1)
+
     describe "expression" $ do
         it "parses a nested tuple" $
             parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
