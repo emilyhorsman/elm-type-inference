@@ -4,6 +4,12 @@ module Strings where
 import Text.RawString.QQ
 
 
+letBindingTwoBindings = [r|let
+    x = True
+    y = True
+in 0|]
+
+
 multiLineIfExpression = [r|if True
   then
     0

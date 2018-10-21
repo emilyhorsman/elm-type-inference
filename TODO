@@ -3,6 +3,8 @@
 - [*] if expressions
 - [*] Function application
 - [*] Lambdas
+- [ ] Let expressions (context-sensitive)
+- [ ] case expression (context-sensitive)
 - [ ] Record values
 - [ ] Record updating
 - [ ] Record accessors
@@ -11,8 +13,6 @@
     - [ ] Unary binary operators
     - [ ] cons
     - [ ] append
-- [ ] Let expressions
-- [ ] case expression
 - [ ] Operator references (e.g., `lessThan = (<)`)
 - [ ] Pattern matching
 - [ ] Function application from ``lvalue'' expression

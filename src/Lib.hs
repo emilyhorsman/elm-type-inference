@@ -29,6 +29,7 @@ data Expression
     -- This should not be a constructor for Function since it is an expression.
     -- TODO: This comment is an undernuanced view.
     | AnonymousFunction [String] Expression
+    | LetBinding [Function] Expression
     deriving (Show, Eq)
 
 
@@ -174,6 +175,14 @@ anonymousFunction = do
     parameters <- some $ identifier <|> symbol "_"
     symbol "->"
     AnonymousFunction parameters <$> expression
+
+
+letBinding :: Parser Expression
+letBinding = do
+    symbolNewline "let"
+    bindings <- function `sepBy1` newline
+    symbolNewline "in"
+    LetBinding bindings <$> expression
 
 
 numberLiteral :: Parser Int

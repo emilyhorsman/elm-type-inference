@@ -157,6 +157,21 @@ main = hspec $ do
         it "parses underscores for parameters" $
             parse anonymousFunction "" "\\_ a _ -> 1" `shouldParse` AnonymousFunction ["_", "a", "_"] (Int 1)
 
+    describe "letBinding" $ do
+        it "parses a single binding" $
+            parse letBinding "" "let x = True in x" `shouldParse`
+                LetBinding
+                    [BoundFunctionDefinition "x" [] (Bool True)]
+                    (FunctionApplication "x" [])
+
+        it "parses multiple bindings separated by newlines" $
+            parse letBinding "" letBindingTwoBindings `shouldParse`
+                LetBinding
+                    [ BoundFunctionDefinition "x" [] (Bool True)
+                    , BoundFunctionDefinition "y" [] (Bool True)
+                    ]
+                    (Int 0)
+
     describe "expression" $ do
         it "parses a nested tuple" $
             parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
