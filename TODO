@@ -1,0 +1,20 @@
+=== Grammar without type annotations ===
+
+- [*] if expressions
+- [ ] Function application
+- [ ] Record values
+- [ ] Record updating
+- [ ] Record accessors
+- [ ] Built-in binary and unary operators
+    - [ ] Arithemetic binary operators
+    - [ ] Unary binary operators
+    - [ ] cons
+    - [ ] append
+- [ ] Let expressions
+- [ ] Lambdas
+- [ ] case expression
+- [ ] Operator references (e.g., `lessThan = (<)`)
+- [ ] Pattern matching
+- [ ] Modules
+- [ ] Imports
+- [ ] Program of top-level functions
