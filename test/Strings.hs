@@ -35,3 +35,27 @@ multiLineIfExpression = [r|if True
     0
   else
     1|]
+
+
+caseMultiplePatternsA = [r|case
+foo
+of
+1 -> 1
+2 -> 2|]
+
+
+caseMultiplePatternsB = [r|case foo of
+  1 ->
+      1
+  2 ->
+      2|]
+
+
+caseMultiplePatternsC = [r|case foo of 1 ->
+    1
+            2 -> 2|]
+
+
+caseInvalidIndentation = [r|case foo of
+1 -> 1
+ 2 -> 2|]

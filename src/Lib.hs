@@ -30,6 +30,12 @@ data Expression
     -- TODO: This comment is an undernuanced view.
     | AnonymousFunction [String] Expression
     | LetBinding [Function] Expression
+    | Cases Expression [Case]
+    deriving (Show, Eq)
+
+
+data Case
+    = Case Expression Expression
     deriving (Show, Eq)
 
 
@@ -127,6 +133,8 @@ expression =
         , ifExpression
         , functionApplication
         , anonymousFunction
+        , letBinding
+        , caseExpression
         ]
 
 
@@ -218,6 +226,34 @@ someLetBindings requiredIndentation = do
         _ -> do
             bindings <- someLetBindings requiredIndentation
             return $ binding : bindings
+
+
+caseExpression :: Parser Expression
+caseExpression = do
+    symbolNewline "case"
+    subject <- expression
+    optional space1
+    symbolNewline "of"
+    level <- L.indentLevel
+    Cases subject <$> someCases level
+
+
+someCases :: Pos -> Parser [Case]
+someCases requiredIndentation = do
+    indentation <- L.indentLevel
+    pattern <- expression
+    symbolNewline "->"
+    body <- expression
+    hasNewlineSeparator <- didConsume newline
+    optional space1
+    case (hasNewlineSeparator, indentation == requiredIndentation) of
+        (_, False) ->
+            L.incorrectIndent EQ requiredIndentation indentation
+        (True, True) -> do
+            cases <- someCases requiredIndentation
+            return $ (Case pattern body) : cases
+        (False, True) -> do
+            return [Case pattern body]
 
 
 numberLiteral :: Parser Int

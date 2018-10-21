@@ -181,6 +181,27 @@ main = hspec $ do
             parse letBinding "A" `shouldFailOn` letBindingTwoBindingsInvalidIndentationA
             parse letBinding "B" `shouldFailOn` letBindingTwoBindingsInvalidIndentationB
 
+    describe "caseExpression" $ do
+        it "parses a single case" $
+            parse caseExpression "" "case True of 1 -> 1" `shouldParse`
+                Cases (Bool True) [Case (Int 1) (Int 1)]
+
+        it "parses multiple patterns separated by newlines" $
+            let
+                result =
+                    Cases
+                        (FunctionApplication "foo" [])
+                        [ Case (Int 1) (Int 1)
+                        , Case (Int 2) (Int 2)
+                        ]
+             in do
+                parse caseExpression "A" caseMultiplePatternsA `shouldParse` result
+                parse caseExpression "B" caseMultiplePatternsB `shouldParse` result
+                parse caseExpression "C" caseMultiplePatternsC `shouldParse` result
+
+        it "fails on mismatching indentation" $
+            parse caseExpression "" `shouldFailOn` caseInvalidIndentation
+
     describe "expression" $ do
         it "parses a nested tuple" $
             parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
@@ -190,3 +211,18 @@ main = hspec $ do
 
         it "parses function application in the predicate of an if statement" $
             parse expression "" "if x 1 then 1 else 0" `shouldParse` If (FunctionApplication "x" [Int 1]) (Int 1) (Int 0)
+
+        it "parses case and let in if" $
+            -- TODO: This is semantically invalid but pattern matching isn't
+            -- implemented yet.
+            parse expression "" "if case x of 1 -> True then let a = 5 in a else 5" `shouldParse`
+                If
+                    (Cases
+                        (FunctionApplication "x" [])
+                        [Case (Int 1) (Bool True)]
+                    )
+                    (LetBinding
+                        [BoundFunctionDefinition "a" [] (Int 5)]
+                        (FunctionApplication "a" [])
+                    )
+                    (Int 5)
