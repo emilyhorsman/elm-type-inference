@@ -3,7 +3,7 @@
 - [*] if expressions
 - [*] Function application
 - [*] Lambdas
-- [ ] Let expressions (context-sensitive)
+- [*] Let expressions (context-sensitive)
 - [ ] case expression (context-sensitive)
 - [ ] Record values
 - [ ] Record updating

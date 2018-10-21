@@ -19,10 +19,15 @@ letBindingTwoBindingsC = [r|let x = True
     y = True in 0|]
 
 
-letBindingTwoBindingsInvalidIndentation = [r|let
+letBindingTwoBindingsInvalidIndentationA = [r|let
     x = True
  y = True
 in 0|]
+
+
+letBindingTwoBindingsInvalidIndentationB = [r|let
+    x = True
+ y = True in 0|]
 
 
 multiLineIfExpression = [r|if True

@@ -177,8 +177,9 @@ main = hspec $ do
                 parse letBinding "B" letBindingTwoBindingsB `shouldParse` result
                 parse letBinding "C" letBindingTwoBindingsC `shouldParse` result
 
-        it "fails on mismatching indentation" $
-            parse letBinding "" `shouldFailOn` letBindingTwoBindingsInvalidIndentation
+        it "fails on mismatching indentation" $ do
+            parse letBinding "A" `shouldFailOn` letBindingTwoBindingsInvalidIndentationA
+            parse letBinding "B" `shouldFailOn` letBindingTwoBindingsInvalidIndentationB
 
     describe "expression" $ do
         it "parses a nested tuple" $

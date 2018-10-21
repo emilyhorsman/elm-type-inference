@@ -184,12 +184,14 @@ anonymousFunction = do
 letBinding :: Parser Expression
 letBinding = do
     symbolNewline "let"
-    bindings <- someLetBindings
+    level <- L.indentLevel
+    bindings <- someLetBindings level
     LetBinding bindings <$> expression
 
 
-someLetBindings :: Parser [Function]
-someLetBindings = do
+someLetBindings :: Pos -> Parser [Function]
+someLetBindings requiredIndentation = do
+    indentation <- L.indentLevel
     -- We must have an initial binding.
     binding <- function
     -- Bindings need to be separated with a newline but we need to give a
@@ -203,13 +205,18 @@ someLetBindings = do
     -- Adhere to the convention of consuming all trailing whitespace.
     optional space1
     done <- didConsume $ symbolNewline "in"
-    case (done, hasNewlineSeparator) of
-        (True, _) ->
+    case (done, hasNewlineSeparator, indentation == requiredIndentation) of
+        (_, _, False) ->
+            -- TODO: The error message for this will be slightly incorrect if
+            -- this is the last binding before the `in` ending, since the error
+            -- will point to the end of the expression.
+            L.incorrectIndent EQ requiredIndentation indentation
+        (True, _, _) ->
             return [binding]
-        (False, False) ->
+        (False, False, _) ->
             fail "expected `in` or newline between let bindings"
         _ -> do
-            bindings <- someLetBindings
+            bindings <- someLetBindings requiredIndentation
             return $ binding : bindings
 
 
