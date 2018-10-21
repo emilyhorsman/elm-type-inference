@@ -144,7 +144,7 @@ main = hspec $ do
         it "fails on invalid parameter names" $
             parse function "" `shouldFailOn` "x 1 = 1"
 
-    describe "function application" $ do
+    describe "functionApplication" $ do
         it "applies a nullary function" $
             parse functionApplication "" "x" `shouldParse` FunctionApplication "x" []
 

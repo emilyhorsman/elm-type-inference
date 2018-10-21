@@ -19,5 +19,6 @@
     - [ ] `(if True then f else g) arg`
     - [ ] `(\x -> x + 1) arg`
 - [ ] Modules
+- [ ] Module accessors
 - [ ] Imports
 - [ ] Program of top-level functions

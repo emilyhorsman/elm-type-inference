@@ -65,7 +65,7 @@ spacePreserveNewlines =
 --
 -- General lexer method here is based on [1] and megaparsec docs.
 -- [1] https://markkarpov.com/megaparsec/parsing-simple-imperative-language.html
-spaceConsumer :: Parser() -> Parser ()
+spaceConsumer :: Parser () -> Parser ()
 spaceConsumer s =
     let
         lineComment =
