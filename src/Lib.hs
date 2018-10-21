@@ -129,11 +129,11 @@ function = do
 
 
 numberLiteral :: Parser Int
-numberLiteral = L.decimal
+numberLiteral = lexeme L.decimal
 
 
 floatLiteral :: Parser Float
-floatLiteral = L.float
+floatLiteral = lexeme L.float
 
 
 -- We should always use this instead of numberLiteral and floatLiteral because
