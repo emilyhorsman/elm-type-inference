@@ -10,6 +10,12 @@ letBindingTwoBindings = [r|let
 in 0|]
 
 
+letBindingTwoBindingsInvalidIndentation = [r|let
+    x = True
+ y = True
+in 0|]
+
+
 multiLineIfExpression = [r|if True
   then
     0

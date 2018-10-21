@@ -172,6 +172,9 @@ main = hspec $ do
                     ]
                     (Int 0)
 
+        it "fails on mismatching indentation" $
+            parse letBinding "" `shouldFailOn` letBindingTwoBindingsInvalidIndentation
+
     describe "expression" $ do
         it "parses a nested tuple" $
             parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]

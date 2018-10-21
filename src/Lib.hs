@@ -179,10 +179,16 @@ anonymousFunction = do
 
 letBinding :: Parser Expression
 letBinding = do
-    symbolNewline "let"
-    bindings <- function `sepBy1` newline
+    -- As per Text.Megaparsec.Char.Lexer documentation:
+    -- First argument of indentBlock must consume newlines.
+    -- bindingsP must NOT consume newlines.
+    bindings <- L.indentBlock (spaceConsumer space1) bindingsP
     symbolNewline "in"
     LetBinding bindings <$> expression
+  where
+    bindingsP = do
+        symbol "let"
+        return $ L.IndentSome Nothing return function
 
 
 numberLiteral :: Parser Int
