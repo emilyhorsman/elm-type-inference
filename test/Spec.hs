@@ -5,6 +5,7 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 
 import Lib
+import Strings
 
 
 main :: IO ()
@@ -123,6 +124,10 @@ main = hspec $ do
 
         it "parses a nested false result" $
             parse ifExpression "" "if True then 0 else if True then 1 else 2" `shouldParse` If (Bool True) (Int 0) (If (Bool True) (Int 1) (Int 2))
+
+        it "parses a multiline if expression" $
+            parse ifExpression "" multiLineIfExpression `shouldParse`
+                If (Bool True) (Int 0) (Int 1)
 
     describe "function" $ do
         it "parses a simple nullary function" $ do

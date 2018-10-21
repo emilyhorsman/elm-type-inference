@@ -1,6 +1,7 @@
 module Lib where
 
-import Data.Char (isDigit)
+import Data.Char (isSpace)
+import Data.Functor (void)
 import Data.Maybe (fromMaybe)
 import qualified Data.Set as Set
 import Data.Void
@@ -36,27 +37,39 @@ data Function
     deriving (Show, Eq)
 
 
+-- Modified from the space1 definition.
+spacePreserveNewlines :: Parser ()
+spacePreserveNewlines =
+    void $ takeWhile1P (Just "white space") p
+  where
+    p c =
+        isSpace c && c /= '\n' && c /= '\r'
+
+
 -- Adhering to the convention suggested by Text.Megaparsec.Char.Lexer where
 -- lexeme parsers assume no space leading a lexeme and consumes all trailing space.
 --
 -- General lexer method here is based on [1] and megaparsec docs.
 -- [1] https://markkarpov.com/megaparsec/parsing-simple-imperative-language.html
-spaceConsumer :: Parser ()
-spaceConsumer =
+spaceConsumer :: Parser() -> Parser ()
+spaceConsumer s =
     let
         lineComment =
             L.skipLineComment "--"
         blockComment =
             L.skipBlockCommentNested "{-" "-}"
     in
-        L.space space1 lineComment blockComment
+        L.space s lineComment blockComment
 
 
 lexeme :: Parser a -> Parser a
-lexeme = L.lexeme spaceConsumer
+lexeme = L.lexeme $ spaceConsumer spacePreserveNewlines
 
 
-symbol = L.symbol spaceConsumer
+symbol = L.symbol $ spaceConsumer spacePreserveNewlines
+
+
+symbolNewline = L.symbol $ spaceConsumer space1
 
 
 reservedWords =
@@ -114,11 +127,14 @@ expression =
 
 ifExpression :: Parser Expression
 ifExpression = do
-    symbol "if"
+    symbolNewline "if"
     predicate <- expression
-    symbol "then"
+    optional space1
+    symbolNewline "then"
     trueResult <- expression
-    symbol "else"
+    optional space1
+    symbolNewline "else"
+    optional space1
     If predicate trueResult <$> expression
 
 
