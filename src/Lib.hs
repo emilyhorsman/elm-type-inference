@@ -23,6 +23,7 @@ data Expression
     | Bool Bool
     | List [Expression]
     | Tuple [Expression]
+    | If Expression Expression Expression
     deriving (Show, Eq)
 
 
@@ -101,7 +102,18 @@ expression =
         , String <$> multiLineString
         , List <$> listLiteral
         , Tuple <$> tupleLiteral
+        , ifExpression
         ]
+
+
+ifExpression :: Parser Expression
+ifExpression = do
+    symbol "if"
+    predicate <- expression
+    symbol "then"
+    trueResult <- expression
+    symbol "else"
+    If predicate trueResult <$> expression
 
 
 commaSeparatedExpressions :: String -> String -> Parser [Expression]

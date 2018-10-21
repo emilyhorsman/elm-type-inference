@@ -110,6 +110,20 @@ main = hspec $ do
         it "parses a tuple of bools" $
             parse tupleLiteral "" "( True, False )" `shouldParse` [Bool True, Bool False]
 
+    describe "ifExpression" $ do
+        it "parses an if statement" $
+            parse ifExpression "" "if True then 0 else 1" `shouldParse` If (Bool True) (Int 0) (Int 1)
+
+        it "parses a nested predicate" $
+            -- This actually works in the official Elm parser!
+            parse ifExpression "" "if if True then True else False then 0 else 1" `shouldParse` If (If (Bool True) (Bool True) (Bool False)) (Int 0) (Int 1)
+
+        it "parses a nested true result" $
+            parse ifExpression "" "if True then if True then 0 else 1 else 2" `shouldParse` If (Bool True) (If (Bool True) (Int 0) (Int 1)) (Int 2)
+
+        it "parses a nested false result" $
+            parse ifExpression "" "if True then 0 else if True then 1 else 2" `shouldParse` If (Bool True) (Int 0) (If (Bool True) (Int 1) (Int 2))
+
     describe "expression" $ do
         it "parses a nested tuple" $
             parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
