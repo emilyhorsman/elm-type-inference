@@ -33,6 +33,7 @@ data Expression
     | LetBinding [Function] Expression
     | Cases Expression [Case]
     | RecordValue (Map.Map String Expression)
+    | RecordUpdate String (Map.Map String Expression)
     deriving (Show, Eq)
 
 
@@ -137,6 +138,8 @@ expression =
         , anonymousFunction
         , letBinding
         , caseExpression
+        , recordValue
+        , recordUpdate
         ]
 
 
@@ -263,13 +266,25 @@ someCases requiredIndentation = do
 recordValue :: Parser Expression
 recordValue =
     fmap (RecordValue . Map.fromList) $
-        between (symbol "{") (symbol "}") $ recordMember `sepBy` symbol ","
-  where
-    recordMember = do
-        key <- identifier
-        symbol "="
-        value <- expression
-        return (key, value)
+        between (symbol "{") (symbol "}") $ recordMemberBinding `sepBy` symbol ","
+
+
+recordUpdate :: Parser Expression
+recordUpdate = do
+    symbol "{"
+    name <- identifier
+    symbol "|"
+    bindings <- recordMemberBinding `sepBy1` symbol ","
+    symbol "}"
+    return $ RecordUpdate name $ Map.fromList bindings
+
+
+recordMemberBinding :: Parser (String, Expression)
+recordMemberBinding = do
+    key <- identifier
+    symbol "="
+    value <- expression
+    return (key, value)
 
 
 numberLiteral :: Parser Int

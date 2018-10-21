@@ -6,7 +6,7 @@
 - [*] Let expressions (context-sensitive)
 - [*] case expression (context-sensitive)
 - [*] Record values
-- [ ] Record updating
+- [*] Record updating
 - [ ] Record accessors
 - [ ] Built-in binary and unary operators
     - [ ] Arithemetic binary operators

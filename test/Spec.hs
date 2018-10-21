@@ -211,6 +211,11 @@ main = hspec $ do
             parse recordValue "" "{ x = 1, y = 2 }" `shouldParse`
                 RecordValue (Map.fromList [("x", Int 1), ("y", Int 2)])
 
+    describe "recordUpdate" $ do
+        it "updates a record" $
+            parse recordUpdate "" "{ rec | x = 1 }" `shouldParse`
+                RecordUpdate "rec" (Map.fromList [("x", Int 1)])
+
     describe "expression" $ do
         it "parses a nested tuple" $
             parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
