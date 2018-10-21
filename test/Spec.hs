@@ -165,12 +165,17 @@ main = hspec $ do
                     (FunctionApplication "x" [])
 
         it "parses multiple bindings separated by newlines" $
-            parse letBinding "" letBindingTwoBindings `shouldParse`
-                LetBinding
-                    [ BoundFunctionDefinition "x" [] (Bool True)
-                    , BoundFunctionDefinition "y" [] (Bool True)
-                    ]
-                    (Int 0)
+            let
+                result =
+                    LetBinding
+                        [ BoundFunctionDefinition "x" [] (Bool True)
+                        , BoundFunctionDefinition "y" [] (Bool True)
+                        ]
+                        (Int 0)
+             in do
+                parse letBinding "A" letBindingTwoBindingsA `shouldParse` result
+                parse letBinding "B" letBindingTwoBindingsB `shouldParse` result
+                parse letBinding "C" letBindingTwoBindingsC `shouldParse` result
 
         it "fails on mismatching indentation" $
             parse letBinding "" `shouldFailOn` letBindingTwoBindingsInvalidIndentation

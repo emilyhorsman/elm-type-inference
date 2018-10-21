@@ -4,10 +4,19 @@ module Strings where
 import Text.RawString.QQ
 
 
-letBindingTwoBindings = [r|let
-    x = True
+letBindingTwoBindingsA = [r|let
+  x = True
+  y = True
+in 0|]
+
+
+letBindingTwoBindingsB = [r|let x = True
     y = True
 in 0|]
+
+
+letBindingTwoBindingsC = [r|let x = True
+    y = True in 0|]
 
 
 letBindingTwoBindingsInvalidIndentation = [r|let

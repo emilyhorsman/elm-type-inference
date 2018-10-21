@@ -38,6 +38,10 @@ data Function
     deriving (Show, Eq)
 
 
+-- Modified pattern from Text.Megaparsec (atEnd)
+didConsume p = option False $ True <$ p
+
+
 -- Modified from the space1 definition.
 spacePreserveNewlines :: Parser ()
 spacePreserveNewlines =
@@ -179,16 +183,34 @@ anonymousFunction = do
 
 letBinding :: Parser Expression
 letBinding = do
-    -- As per Text.Megaparsec.Char.Lexer documentation:
-    -- First argument of indentBlock must consume newlines.
-    -- bindingsP must NOT consume newlines.
-    bindings <- L.indentBlock (spaceConsumer space1) bindingsP
-    symbolNewline "in"
+    symbolNewline "let"
+    bindings <- someLetBindings
     LetBinding bindings <$> expression
-  where
-    bindingsP = do
-        symbol "let"
-        return $ L.IndentSome Nothing return function
+
+
+someLetBindings :: Parser [Function]
+someLetBindings = do
+    -- We must have an initial binding.
+    binding <- function
+    -- Bindings need to be separated with a newline but we need to give a
+    -- chance for the `in` ending to be on the same line. The example below
+    -- is valid Elm.
+    --
+    --     let
+    --       x = 0
+    --       y = 1 in x + y
+    hasNewlineSeparator <- didConsume newline
+    -- Adhere to the convention of consuming all trailing whitespace.
+    optional space1
+    done <- didConsume $ symbolNewline "in"
+    case (done, hasNewlineSeparator) of
+        (True, _) ->
+            return [binding]
+        (False, False) ->
+            fail "expected `in` or newline between let bindings"
+        _ -> do
+            bindings <- someLetBindings
+            return $ binding : bindings
 
 
 numberLiteral :: Parser Int
