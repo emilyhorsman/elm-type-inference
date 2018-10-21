@@ -2,6 +2,7 @@ module Lib where
 
 import Data.Char (isSpace)
 import Data.Functor (void)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe)
 import qualified Data.Set as Set
 import Data.Void
@@ -31,6 +32,7 @@ data Expression
     | AnonymousFunction [String] Expression
     | LetBinding [Function] Expression
     | Cases Expression [Case]
+    | RecordValue (Map.Map String Expression)
     deriving (Show, Eq)
 
 
@@ -170,6 +172,7 @@ tupleLiteral =
 function :: Parser Function
 function = do
     bindingName <- identifier
+    -- TODO: Support pattern matching
     parameters <- many identifier
     symbol "="
     BoundFunctionDefinition bindingName parameters <$> expression
@@ -241,6 +244,7 @@ caseExpression = do
 someCases :: Pos -> Parser [Case]
 someCases requiredIndentation = do
     indentation <- L.indentLevel
+    -- TODO: Actual pattern syntax
     pattern <- expression
     symbolNewline "->"
     body <- expression
@@ -254,6 +258,18 @@ someCases requiredIndentation = do
             return $ (Case pattern body) : cases
         (False, True) -> do
             return [Case pattern body]
+
+
+recordValue :: Parser Expression
+recordValue =
+    fmap (RecordValue . Map.fromList) $
+        between (symbol "{") (symbol "}") $ recordMember `sepBy` symbol ","
+  where
+    recordMember = do
+        key <- identifier
+        symbol "="
+        value <- expression
+        return (key, value)
 
 
 numberLiteral :: Parser Int

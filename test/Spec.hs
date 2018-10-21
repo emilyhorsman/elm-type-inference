@@ -1,4 +1,5 @@
 import Control.Monad (liftM2)
+import qualified Data.Map.Strict as Map
 import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
@@ -201,6 +202,14 @@ main = hspec $ do
 
         it "fails on mismatching indentation" $
             parse caseExpression "" `shouldFailOn` caseInvalidIndentation
+
+    describe "recordValue" $ do
+        it "parses an empty record" $
+            parse recordValue "" "{}" `shouldParse` RecordValue Map.empty
+
+        it "parses a record" $
+            parse recordValue "" "{ x = 1, y = 2 }" `shouldParse`
+                RecordValue (Map.fromList [("x", Int 1), ("y", Int 2)])
 
     describe "expression" $ do
         it "parses a nested tuple" $
