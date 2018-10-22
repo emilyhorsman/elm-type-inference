@@ -10,6 +10,7 @@ import Numeric (readDec)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Debug
 
 import Utility
 
@@ -26,7 +27,7 @@ data Expression
     | List [Expression]
     | Tuple [Expression]
     | If Expression Expression Expression
-    | FunctionApplication String [Expression]
+    | FunctionApplication Expression [Expression]
     -- This should not be a constructor for Function since it is an expression.
     -- TODO: This comment is an undernuanced view.
     | AnonymousFunction [String] Expression
@@ -34,6 +35,7 @@ data Expression
     | Cases Expression [Case]
     | RecordValue (Map.Map String Expression)
     | RecordUpdate String (Map.Map String Expression)
+    | Reference String
     deriving (Show, Eq)
 
 
@@ -122,25 +124,51 @@ identifier =
         (lexeme . try) (parser >>= failIfReservedWord)
 
 
--- TODO: Remember Control.Monad.Combinators.Expr
+surroundedExpression :: Parser Expression
+surroundedExpression = dbg "surroundedExpr" $
+    symbol "(" *> choice (expressionParsers ++ literalParsers) <* symbol ")"
+
+
+literalParsers :: [Parser Expression]
+literalParsers =
+    [ surroundedExpression
+    , numberWrapper
+    , Bool <$> bool
+    , Char <$> singleChar
+    , String <$> singleLineString
+    , String <$> multiLineString
+    --, List <$> listLiteral
+    --, Tuple <$> tupleLiteral
+    , recordValue
+    , recordUpdate
+    , dbg "reference" reference
+    ]
+
+
+reference :: Parser Expression
+reference =
+    Reference <$> identifier
+
+
+-- The decision here is ``Could the result of this expression be something used
+-- in function application?''
+--
+-- That is:
+--
+--     (if True then g else h) (let a = f in a) 1
+expressionParsers :: [Parser Expression]
+expressionParsers =
+    [ ifExpression
+    , functionApplication
+    , anonymousFunction
+    , letBinding
+    , caseExpression
+    ]
+
+
 expression :: Parser Expression
 expression =
-    choice
-        [ numberWrapper
-        , Bool <$> bool
-        , Char <$> singleChar
-        , String <$> singleLineString
-        , String <$> multiLineString
-        , List <$> listLiteral
-        , Tuple <$> tupleLiteral
-        , ifExpression
-        , functionApplication
-        , anonymousFunction
-        , letBinding
-        , caseExpression
-        , recordValue
-        , recordUpdate
-        ]
+    choice $ literalParsers ++ expressionParsers
 
 
 ifExpression :: Parser Expression
@@ -182,9 +210,9 @@ function = do
 
 
 functionApplication :: Parser Expression
-functionApplication = do
-    bindingName <- identifier
-    FunctionApplication bindingName <$> many expression
+functionApplication = dbg "funApp" $ do
+    lvalue <- choice literalParsers
+    FunctionApplication lvalue <$> some (dbg "expr" (choice literalParsers))
 
 
 anonymousFunction :: Parser Expression
