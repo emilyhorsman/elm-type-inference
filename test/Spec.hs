@@ -11,65 +11,65 @@ import Strings
 
 main :: IO ()
 main = hspec $ do
-    describe "bool" $ do
+    describe "boolLiteral" $ do
         it "returns True" $
-            parse bool "" "True" `shouldParse` True
+            parse boolLiteral "" "True" `shouldParse` Bool True
 
         it "returns False" $
-            parse bool "" "False" `shouldParse` False
+            parse boolLiteral "" "False" `shouldParse` Bool False
 
         it "fails" $
-            parse bool "" `shouldFailOn` "not a bool!"
+            parse boolLiteral "" `shouldFailOn` "not a bool!"
 
-    describe "singleChar" $ do
+    describe "charLiteral" $ do
         it "returns escaped char" $ do
-            parse singleChar "" "'\\n'" `shouldParse` '\n'
-            parse singleChar "" "'\\r'" `shouldParse` '\r'
-            parse singleChar "" "'\\t'" `shouldParse` '\t'
-            parse singleChar "" "'\\\"'" `shouldParse` '"'
-            parse singleChar "" "'\\''" `shouldParse` '\''
-            parse singleChar "" "'\\\\'" `shouldParse` '\\'
+            parse charLiteral "" "'\\n'" `shouldParse` Char '\n'
+            parse charLiteral "" "'\\r'" `shouldParse` Char '\r'
+            parse charLiteral "" "'\\t'" `shouldParse` Char '\t'
+            parse charLiteral "" "'\\\"'" `shouldParse` Char '"'
+            parse charLiteral "" "'\\''" `shouldParse` Char '\''
+            parse charLiteral "" "'\\\\'" `shouldParse` Char '\\'
 
         it "returns char" $
-            parse singleChar "" "'a'" `shouldParse` 'a'
+            parse charLiteral "" "'a'" `shouldParse` Char 'a'
 
         it "fails on invalid escape sequence" $
-            parse singleChar "" `shouldFailOn` "'\\a'"
+            parse charLiteral "" `shouldFailOn` "'\\a'"
 
         it "fails on unescaped quote" $
-            parse singleChar "" `shouldFailOn` "'''"
+            parse charLiteral "" `shouldFailOn` "'''"
 
-    describe "singleLineString" $ do
+    describe "singleLineStringLiteral" $ do
         it "returns string" $
-            parse singleLineString "" "\"Hello\"" `shouldParse` "Hello"
+            parse singleLineStringLiteral "" "\"Hello\"" `shouldParse` String "Hello"
 
         it "returns string with escape sequences" $ do
-            parse singleLineString "" "\"Hello\\n\"" `shouldParse` "Hello\n"
-            parse singleLineString "" "\"Hello\\\"\"" `shouldParse` "Hello\""
-            parse singleLineString "" "\" \\t \\r \\n \"" `shouldParse` " \t \r \n "
+            parse singleLineStringLiteral "" "\"Hello\\n\"" `shouldParse` String "Hello\n"
+            parse singleLineStringLiteral "" "\"Hello\\\"\"" `shouldParse` String "Hello\""
+            parse singleLineStringLiteral "" "\" \\t \\r \\n \"" `shouldParse` String " \t \r \n "
 
         it "cannot have a newline" $ do
-            parse singleLineString "" `shouldFailOn` "Hello\nGoodbye"
-            parse singleLineString "" `shouldFailOn` "Hello\rGoodbye"
+            parse singleLineStringLiteral "" `shouldFailOn` "Hello\nGoodbye"
+            parse singleLineStringLiteral "" `shouldFailOn` "Hello\rGoodbye"
 
-    describe "multiLineString" $
+    describe "multiLineStringLiteral" $
         it "returns string" $
-            parse multiLineString "" "\"\"\"Hello\nGoodbye\"\"\"" `shouldParse` "Hello\nGoodbye"
+            parse multiLineStringLiteral "" "\"\"\"Hello\nGoodbye\"\"\"" `shouldParse` String "Hello\nGoodbye"
 
-    describe "numberLiteral" $ do
+    describe "numberLexeme" $ do
         it "returns number" $ do
-            parse numberLiteral "" "42" `shouldParse` 42
-            parse (liftM2 (,) numberLiteral (char '.')) "" "42." `shouldParse` (42, '.')
+            parse numberLexeme "" "42" `shouldParse` 42
+            parse (liftM2 (,) numberLexeme (char '.')) "" "42." `shouldParse` (42, '.')
 
         it "fails on sign" $
-            parse numberLiteral "" `shouldFailOn` "-4"
+            parse numberLexeme "" `shouldFailOn` "-4"
 
         it "accepts list of numbers" $
-            parse (sepBy numberLiteral (char ',')) "" "4,4" `shouldParse` [4,4]
+            parse (sepBy numberLexeme (char ',')) "" "4,4" `shouldParse` [4,4]
 
-    describe "floatLiteral" $
+    describe "floatLexeme" $
         it "returns float" $
-            parse floatLiteral "" "4.5" `shouldParse` 4.5
+            parse floatLexeme "" "4.5" `shouldParse` 4.5
 
     describe "identifier" $ do
         it "fails on reserved word" $
@@ -81,15 +81,15 @@ main = hspec $ do
         it "accepts identifier" $
             parse identifier "" "foobar " `shouldParse` "foobar"
 
-    describe "numberWrapper" $ do
+    describe "numberLiteral" $ do
         it "returns float" $
-            parse numberWrapper "" "4.5" `shouldParse` Float 4.5
+            parse numberLiteral "" "4.5" `shouldParse` Float 4.5
 
         it "returns int" $
-            parse numberWrapper "" "4" `shouldParse` Int 4
+            parse numberLiteral "" "4" `shouldParse` Int 4
 
         it "fails on trailing ." $
-            parse numberWrapper "" `shouldFailOn` "4."
+            parse numberLiteral "" `shouldFailOn` "4."
 
     describe "listLiteral" $ do
         it "parses an empty list" $

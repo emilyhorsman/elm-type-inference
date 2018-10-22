@@ -126,11 +126,11 @@ identifier =
 expression :: Parser Expression
 expression =
     choice
-        [ numberWrapper
-        , Bool <$> bool
-        , Char <$> singleChar
-        , String <$> singleLineString
-        , String <$> multiLineString
+        [ numberLiteral
+        , boolLiteral
+        , charLiteral
+        , singleLineStringLiteral
+        , multiLineStringLiteral
         , List <$> listLiteral
         , Tuple <$> tupleLiteral
         , ifExpression
@@ -287,30 +287,33 @@ recordMemberBinding = do
     return (key, value)
 
 
-numberLiteral :: Parser Int
-numberLiteral = lexeme L.decimal
+numberLexeme :: Parser Int
+numberLexeme = lexeme L.decimal
 
 
-floatLiteral :: Parser Float
-floatLiteral = lexeme L.float
+floatLexeme :: Parser Float
+floatLexeme = lexeme L.float
 
 
--- We should always use this instead of numberLiteral and floatLiteral because
+-- We should always use this instead of numberLexeme and floatLexeme because
 -- they erroneously accept values such as `4.` or `4a` and return 4.
 --
 -- There might be a better way of doing this?
-numberWrapper :: Parser Expression
-numberWrapper = do
+numberLiteral :: Parser Expression
+numberLiteral = do
     -- Trailing floating points are not allowed in Elm. i.e., `4.`
     candidate <- getInput
     if '.' `elem` candidate
-        then Float <$> floatLiteral
-        else Int <$> numberLiteral
+        then Float <$> floatLexeme
+        else Int <$> numberLexeme
 
 
-bool :: Parser Bool
-bool =
-    True <$ symbol "True" <|> False <$ symbol "False"
+boolLiteral :: Parser Expression
+boolLiteral =
+    choice
+        [ Bool True <$ symbol "True"
+        , Bool False <$ symbol "False"
+        ]
 
 
 -- TODO: #1 Handle Unicode code point \u{03BB}
@@ -326,19 +329,20 @@ escapedChar =
         ] <?> "valid escape sequence: \\n, \\r, \\t, \\\", \\', \\\\"
 
 
-singleChar :: Parser Char
-singleChar =
-    surroundedBy (char '\'') $ escapedChar <|> noneOf "'\\"
+charLiteral :: Parser Expression
+charLiteral =
+    fmap Char $ surroundedBy (char '\'') $ escapedChar <|> noneOf "'\\"
 
 
-singleLineString :: Parser String
-singleLineString =
-    surroundedBy (char '"') $
-        many $ escapedChar <|> noneOf "\"\\\r\n"
+singleLineStringLiteral :: Parser Expression
+singleLineStringLiteral =
+    fmap String $
+        surroundedBy (char '"') $
+            many $ escapedChar <|> noneOf "\"\\\r\n"
 
 
-multiLineString :: Parser String
-multiLineString =
-    surround >> manyTill (escapedChar <|> noneOf "\\") surround
+multiLineStringLiteral :: Parser Expression
+multiLineStringLiteral =
+    fmap String $ surround >> manyTill (escapedChar <|> noneOf "\\") surround
   where
     surround = count 3 (char '"')
