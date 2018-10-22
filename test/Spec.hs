@@ -5,7 +5,9 @@ import Test.Hspec.Megaparsec
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
+import AST
 import Lib
+import Literals
 import Strings
 
 
@@ -185,15 +187,15 @@ main = hspec $ do
     describe "caseExpression" $ do
         it "parses a single case" $
             parse caseExpression "" "case True of 1 -> 1" `shouldParse`
-                Cases (Bool True) [Case (Int 1) (Int 1)]
+                Case (Bool True) [CaseBranch (Int 1) (Int 1)]
 
         it "parses multiple patterns separated by newlines" $
             let
                 result =
-                    Cases
+                    Case
                         (FunctionApplication "foo" [])
-                        [ Case (Int 1) (Int 1)
-                        , Case (Int 2) (Int 2)
+                        [ CaseBranch (Int 1) (Int 1)
+                        , CaseBranch (Int 2) (Int 2)
                         ]
              in do
                 parse caseExpression "A" caseMultiplePatternsA `shouldParse` result
@@ -231,9 +233,9 @@ main = hspec $ do
             -- implemented yet.
             parse expression "" "if case x of 1 -> True then let a = 5 in a else 5" `shouldParse`
                 If
-                    (Cases
+                    (Case
                         (FunctionApplication "x" [])
-                        [Case (Int 1) (Bool True)]
+                        [CaseBranch (Int 1) (Bool True)]
                     )
                     (LetBinding
                         [BoundFunctionDefinition "a" [] (Int 5)]

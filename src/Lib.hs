@@ -1,108 +1,17 @@
 module Lib where
 
-import Data.Char (isSpace)
-import Data.Functor (void)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (fromMaybe)
 import qualified Data.Set as Set
-import Data.Void
-import Numeric (readDec)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
+import AST
+import Elm
+import Literals
+import ParserDefinition
 import Utility
-
-
-type Parser = Parsec Void String
-
-
-data Expression
-    = Char Char
-    | String String
-    | Int Int
-    | Float Float
-    | Bool Bool
-    | List [Expression]
-    | Tuple [Expression]
-    | If Expression Expression Expression
-    | FunctionApplication String [Expression]
-    -- This should not be a constructor for Function since it is an expression.
-    -- TODO: This comment is an undernuanced view.
-    | AnonymousFunction [String] Expression
-    | LetBinding [Function] Expression
-    | Cases Expression [Case]
-    | RecordValue (Map.Map String Expression)
-    | RecordUpdate String (Map.Map String Expression)
-    deriving (Show, Eq)
-
-
-data Case
-    = Case Expression Expression
-    deriving (Show, Eq)
-
-
-data Function
-    = BoundFunctionDefinition String [String] Expression
-    deriving (Show, Eq)
-
-
--- Modified pattern from Text.Megaparsec (atEnd)
-didConsume p = option False $ True <$ p
-
-
--- Modified from the space1 definition.
-spacePreserveNewlines :: Parser ()
-spacePreserveNewlines =
-    void $ takeWhile1P (Just "white space") p
-  where
-    p c =
-        isSpace c && c /= '\n' && c /= '\r'
-
-
--- Adhering to the convention suggested by Text.Megaparsec.Char.Lexer where
--- lexeme parsers assume no space leading a lexeme and consumes all trailing space.
---
--- General lexer method here is based on [1] and megaparsec docs.
--- [1] https://markkarpov.com/megaparsec/parsing-simple-imperative-language.html
-spaceConsumer :: Parser () -> Parser ()
-spaceConsumer s =
-    let
-        lineComment =
-            L.skipLineComment "--"
-        blockComment =
-            L.skipBlockCommentNested "{-" "-}"
-    in
-        L.space s lineComment blockComment
-
-
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme $ spaceConsumer spacePreserveNewlines
-
-
-symbol = L.symbol $ spaceConsumer spacePreserveNewlines
-
-
-symbolNewline = L.symbol $ spaceConsumer space1
-
-
-reservedWords =
-    Set.fromList
-        [ "as"
-        , "case"
-        , "else"
-        , "exposing"
-        , "if"
-        , "import"
-        , "in"
-        , "let"
-        , "module"
-        , "of"
-        , "port"
-        , "then"
-        , "type"
-        , "where"
-        ]
+import Whitespace
 
 
 identifierLeadingChar = lowerChar
@@ -172,7 +81,7 @@ tupleLiteral =
     commaSeparatedExpressions "(" ")"
 
 
-function :: Parser Function
+function :: Parser Declaration
 function = do
     bindingName <- identifier
     -- TODO: Support pattern matching
@@ -203,7 +112,7 @@ letBinding = do
     LetBinding bindings <$> expression
 
 
-someLetBindings :: Pos -> Parser [Function]
+someLetBindings :: Pos -> Parser [Declaration]
 someLetBindings requiredIndentation = do
     indentation <- L.indentLevel
     -- We must have an initial binding.
@@ -241,11 +150,11 @@ caseExpression = do
     optional space1
     symbolNewline "of"
     level <- L.indentLevel
-    Cases subject <$> someCases level
+    Case subject <$> caseBranches level
 
 
-someCases :: Pos -> Parser [Case]
-someCases requiredIndentation = do
+caseBranches :: Pos -> Parser [CaseBranch]
+caseBranches requiredIndentation = do
     indentation <- L.indentLevel
     -- TODO: Actual pattern syntax
     pattern <- expression
@@ -257,10 +166,10 @@ someCases requiredIndentation = do
         (_, False) ->
             L.incorrectIndent EQ requiredIndentation indentation
         (True, True) -> do
-            cases <- someCases requiredIndentation
-            return $ (Case pattern body) : cases
+            cases <- caseBranches requiredIndentation
+            return $ (CaseBranch pattern body) : cases
         (False, True) -> do
-            return [Case pattern body]
+            return [CaseBranch pattern body]
 
 
 recordValue :: Parser Expression
@@ -285,64 +194,3 @@ recordMemberBinding = do
     symbol "="
     value <- expression
     return (key, value)
-
-
-numberLexeme :: Parser Int
-numberLexeme = lexeme L.decimal
-
-
-floatLexeme :: Parser Float
-floatLexeme = lexeme L.float
-
-
--- We should always use this instead of numberLexeme and floatLexeme because
--- they erroneously accept values such as `4.` or `4a` and return 4.
---
--- There might be a better way of doing this?
-numberLiteral :: Parser Expression
-numberLiteral = do
-    -- Trailing floating points are not allowed in Elm. i.e., `4.`
-    candidate <- getInput
-    if '.' `elem` candidate
-        then Float <$> floatLexeme
-        else Int <$> numberLexeme
-
-
-boolLiteral :: Parser Expression
-boolLiteral =
-    choice
-        [ Bool True <$ symbol "True"
-        , Bool False <$ symbol "False"
-        ]
-
-
--- TODO: #1 Handle Unicode code point \u{03BB}
-escapedChar :: Parser Char
-escapedChar =
-    char '\\' >> choice
-        [ '\n' <$ char 'n'
-        , '\r' <$ char 'r'
-        , '\t' <$ char 't'
-        , '"' <$ char '"'
-        , '\'' <$ char '\''
-        , '\\' <$ char '\\'
-        ] <?> "valid escape sequence: \\n, \\r, \\t, \\\", \\', \\\\"
-
-
-charLiteral :: Parser Expression
-charLiteral =
-    fmap Char $ surroundedBy (char '\'') $ escapedChar <|> noneOf "'\\"
-
-
-singleLineStringLiteral :: Parser Expression
-singleLineStringLiteral =
-    fmap String $
-        surroundedBy (char '"') $
-            many $ escapedChar <|> noneOf "\"\\\r\n"
-
-
-multiLineStringLiteral :: Parser Expression
-multiLineStringLiteral =
-    fmap String $ surround >> manyTill (escapedChar <|> noneOf "\\") surround
-  where
-    surround = count 3 (char '"')
