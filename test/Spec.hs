@@ -73,16 +73,6 @@ main = hspec $ do
         it "returns float" $
             parse floatLexeme "" "4.5" `shouldParse` 4.5
 
-    describe "identifier" $ do
-        it "fails on reserved word" $
-            parse identifier "" `shouldFailOn` "if"
-
-        it "must start with lowercase letter" $
-            parse identifier "" `shouldFailOn` "Variable"
-
-        it "accepts identifier" $
-            parse identifier "" "foobar " `shouldParse` "foobar"
-
     describe "numberLiteral" $ do
         it "returns float" $
             parse numberLiteral "" "4.5" `shouldParse` Float 4.5
@@ -92,6 +82,16 @@ main = hspec $ do
 
         it "fails on trailing ." $
             parse numberLiteral "" `shouldFailOn` "4."
+
+    describe "identifier" $ do
+        it "fails on reserved word" $
+            parse identifier "" `shouldFailOn` "if"
+
+        it "must start with lowercase letter" $
+            parse identifier "" `shouldFailOn` "Variable"
+
+        it "accepts identifier" $
+            parse identifier "" "foobar " `shouldParse` "foobar"
 
     describe "listLiteral" $ do
         it "parses an empty list" $
