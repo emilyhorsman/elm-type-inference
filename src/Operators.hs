@@ -15,29 +15,29 @@ functionApplicationJuxtaposition =
 
 addOperator :: OpP
 addOperator =
-    BinOpL Add <$ symbol "+"
+    BinOp Add <$ symbol "+"
 
 
 minusOperator :: OpP
 minusOperator =
-    BinOpL Minus <$ symbol "-"
+    BinOp Minus <$ symbol "-"
 
 
 multiplyOperator :: OpP
 multiplyOperator =
-    BinOpL Multiply <$ symbol "*"
+    BinOp Multiply <$ symbol "*"
 
 
 divideOperator :: OpP
 divideOperator =
-    BinOpL Divide <$ symbol "/"
+    BinOp Divide <$ symbol "/"
 
 
 intDivideOperator :: OpP
 intDivideOperator =
-    BinOpL IntegerDivide <$ symbol "//"
+    BinOp IntegerDivide <$ symbol "//"
 
 
 exponentiationOperator :: OpP
 exponentiationOperator =
-    BinOpR Exponentiation <$ symbol "^"
+    BinOp Exponentiation <$ symbol "^"

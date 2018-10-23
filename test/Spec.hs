@@ -293,32 +293,32 @@ main = hspec $ do
 
         it "parses addition" $
             parse expression "" "a + b" `shouldParse`
-                BinOpL Add (Variable "a") (Variable "b")
+                BinOp Add (Variable "a") (Variable "b")
 
         it "parses function application with higher precedence than addition" $
             parse expression "" "f a + f b" `shouldParse`
-                BinOpL
+                BinOp
                     Add
                     (FunctionApplication (Variable "f") (Variable "a"))
                     (FunctionApplication (Variable "f") (Variable "b"))
 
         it "parses minus" $
             parse expression "" "a - b" `shouldParse`
-                BinOpL Minus (Variable "a") (Variable "b")
+                BinOp Minus (Variable "a") (Variable "b")
 
         it "multiply binds tighter than addition" $
             parse expression "" "a + b * c" `shouldParse`
-                BinOpL
+                BinOp
                     Add
                     (Variable "a")
-                    (BinOpL Multiply (Variable "b") (Variable "c"))
+                    (BinOp Multiply (Variable "b") (Variable "c"))
 
         it "parses exponentiation" $
             parse expression "" "2^3^f 1" `shouldParse`
-                BinOpR
+                BinOp
                     Exponentiation
                     (Int 2)
-                    (BinOpR
+                    (BinOp
                         Exponentiation
                         (Int 3)
                         (FunctionApplication (Variable "f") (Int 1))
