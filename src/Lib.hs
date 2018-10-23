@@ -56,6 +56,10 @@ term =
 table =
     [ [ InfixL functionApplicationJuxtaposition
       ]
+    , [ InfixL multiplyOperator
+      , InfixL divideOperator
+      , InfixL intDivideOperator
+      ]
     , [ InfixL addOperator
       , InfixL minusOperator
       ]

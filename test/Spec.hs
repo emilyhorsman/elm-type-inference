@@ -301,3 +301,14 @@ main = hspec $ do
                     Add
                     (FunctionApplication (Variable "f") (Variable "a"))
                     (FunctionApplication (Variable "f") (Variable "b"))
+
+        it "parses minus" $
+            parse expression "" "a - b" `shouldParse`
+                BinOpL Minus (Variable "a") (Variable "b")
+
+        it "multiply binds tighter than addition" $
+            parse expression "" "a + b * c" `shouldParse`
+                BinOpL
+                    Add
+                    (Variable "a")
+                    (BinOpL Multiply (Variable "b") (Variable "c"))
