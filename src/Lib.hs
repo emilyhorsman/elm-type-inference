@@ -72,6 +72,9 @@ table =
       , InfixN gtOperator
       , InfixN gteOperator
       ]
+    , [ InfixR booleanAndOperator
+      , InfixR booleanOrOperator
+      ]
     ]
 
 

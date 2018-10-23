@@ -46,4 +46,6 @@ data BinOp
     | LessThanEq
     | GreaterThan
     | GreaterThanEq
+    | BooleanAnd
+    | BooleanOr
     deriving (Show, Eq)

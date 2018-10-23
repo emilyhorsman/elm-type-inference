@@ -326,3 +326,14 @@ main = hspec $ do
 
         it "has non-associative comparison operators" $
             parse expression "" `shouldFailOn` "a == b /= c"
+
+        it "has boolean operators" $
+            parse expression "" "if a && b || c then 1 else 0" `shouldParse`
+                If
+                    (BinOp
+                        BooleanAnd
+                        (Variable "a")
+                        (BinOp BooleanOr (Variable "b") (Variable "c"))
+                    )
+                    (Int 1)
+                    (Int 0)

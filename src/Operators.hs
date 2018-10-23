@@ -71,3 +71,13 @@ gtOperator =
 gteOperator :: OpP
 gteOperator =
     BinOp GreaterThanEq <$ symbol ">="
+
+
+booleanAndOperator :: OpP
+booleanAndOperator =
+    BinOp BooleanAnd <$ symbol "&&"
+
+
+booleanOrOperator :: OpP
+booleanOrOperator =
+    BinOp BooleanOr <$ symbol "||"
