@@ -16,6 +16,36 @@ op n deterrent =
     (lexeme . try) (string n <* notFollowedBy deterrent)
 
 
+operators :: [String]
+operators =
+    [ "<|"
+    , "|>"
+    , "<<"
+    , ">>"
+    , "++"
+    , "::"
+    , "&&"
+    , "||"
+    , "+"
+    , "-"
+    , "*"
+    , "/="
+    , "//"
+    , "/"
+    , "^"
+    , "=="
+    , "<="
+    , "<"
+    , ">="
+    , ">"
+    ]
+
+
+operatorReference :: Parser String
+operatorReference =
+    choice $ string <$> operators
+
+
 unaryNegative :: Parser (Expression -> Expression)
 unaryNegative =
     -- Whitespace after unary minus operator is prohibited.

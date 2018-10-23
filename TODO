@@ -19,7 +19,7 @@
     - [*] Composition and application
 - [*] Record accessors
 - [*] Module accessors
-- [ ] Operator references (e.g., `lessThan = (<)`)
+- [*] Operator references (e.g., `lessThan = (<)`)
 - [ ] Pattern matching
 - [ ] Modules
 - [ ] Imports

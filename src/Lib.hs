@@ -100,9 +100,10 @@ expression =
 variable :: Parser Expression
 variable =
     choice
+        [ try $ fmap Variable $ symbol "(" *> operatorReference <* symbol ")"
         -- Assumption here: an accessor beginning with an upper case character
         -- is a module. e.g., List.map
-        [ try $ liftM2 QualifiedModuleAccess moduleName dottedIdentifier
+        , try $ liftM2 QualifiedModuleAccess moduleName dottedIdentifier
         , try $ liftM2 QualifiedRecordAccess identifier dottedIdentifier
         , RecordAccess <$> dottedIdentifier
         , Variable <$> identifier

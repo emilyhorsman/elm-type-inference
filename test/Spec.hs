@@ -8,6 +8,7 @@ import Text.Megaparsec.Char
 import AST
 import Lib
 import Literals
+import Operators (operators)
 import Strings
 
 
@@ -227,10 +228,10 @@ main = hspec $ do
 
     describe "variable" $ do
         it "parses an identifier" $
-            parse variable "" "foo" `shouldParse` (Variable "foo")
+            parse variable "" "foo" `shouldParse` Variable "foo"
 
         it "parses a record accessor" $
-            parse variable "" ".x" `shouldParse` (RecordAccess "x")
+            parse variable "" ".x" `shouldParse` RecordAccess "x"
 
         it "parses a qualified record accessor" $
             parse variable "" "foo.x" `shouldParse`
@@ -239,6 +240,13 @@ main = hspec $ do
         it "parses a qualified module accessor" $
             parse variable "" "List.map" `shouldParse`
                 QualifiedModuleAccess "List" "map"
+
+        it "parses a reference to an operator in parenthesis" $
+            let
+                test op =
+                    parse variable "" ("(" ++ op ++ ")") `shouldParse` Variable op
+            in
+                mapM_ test operators
 
     describe "expression" $ do
         it "degrades into term" $ do
