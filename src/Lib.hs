@@ -56,6 +56,9 @@ term =
 table =
     [ [ InfixL functionApplicationJuxtaposition
       ]
+    , [ InfixL composeLeftOperator
+      , InfixR composeRightOperator
+      ]
     , [ InfixR exponentiationOperator
       ]
     , [ InfixL multiplyOperator
@@ -77,6 +80,9 @@ table =
       ]
     , [ InfixR booleanAndOperator
       , InfixR booleanOrOperator
+      ]
+    , [ InfixR applyLeftOperator
+      , InfixL applyRightOperator
       ]
     ]
 

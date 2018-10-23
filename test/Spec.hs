@@ -348,3 +348,14 @@ main = hspec $ do
                         (Variable "y")
                         (BinOp Append (List []) (Variable "z"))
                     )
+
+        it "has composition and application" $
+            parse expression "" "1 |> f >> f" `shouldParse`
+                BinOp
+                    ApplyRight
+                    (Int 1)
+                    (BinOp
+                        ComposeRight
+                        (Variable "f")
+                        (Variable "f")
+                    )

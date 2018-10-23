@@ -12,10 +12,12 @@
     - [*] `(\x -> x + 1) arg`
 - [ ] Record accessors
 - [ ] Built-in binary and unary operators
-    - [ ] Arithemetic binary operators
+    - [*] Arithemetic binary operators
+    - [*] Comparison operators
     - [ ] Unary binary operators
-    - [ ] cons
-    - [ ] append
+    - [*] cons
+    - [*] append
+    - [*] Composition and application
 - [ ] Operator references (e.g., `lessThan = (<)`)
 - [ ] Pattern matching
 - [ ] Modules

@@ -100,3 +100,23 @@ appendOperator =
 consOperator :: OpP
 consOperator =
     BinOp Cons <$ symbol "::"
+
+
+applyLeftOperator :: OpP
+applyLeftOperator =
+    BinOp ApplyLeft <$ symbol "<|"
+
+
+applyRightOperator :: OpP
+applyRightOperator =
+    BinOp ApplyRight <$ symbol "|>"
+
+
+composeLeftOperator :: OpP
+composeLeftOperator =
+    BinOp ComposeLeft <$ symbol "<<"
+
+
+composeRightOperator :: OpP
+composeRightOperator =
+    BinOp ComposeRight <$ symbol ">>"

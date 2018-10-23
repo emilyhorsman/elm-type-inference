@@ -50,4 +50,8 @@ data BinOp
     | BooleanOr
     | Append
     | Cons
+    | ApplyLeft
+    | ApplyRight
+    | ComposeLeft
+    | ComposeRight
     deriving (Show, Eq)
