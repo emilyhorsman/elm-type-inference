@@ -57,6 +57,7 @@ table =
     [ [ InfixL functionApplicationJuxtaposition
       ]
     , [ InfixL addOperator
+      , InfixL minusOperator
       ]
     ]
 
@@ -173,7 +174,14 @@ caseBranches :: Pos -> Parser [CaseBranch]
 caseBranches requiredIndentation = do
     indentation <- L.indentLevel
     -- TODO: Actual pattern syntax
-    pattern <- expression
+    pattern <- choice
+        [ variable
+        , numberLiteral
+        , boolLiteral
+        , charLiteral
+        , singleLineStringLiteral
+        , multiLineStringLiteral
+        ]
     symbolNewline "->"
     body <- expression
     hasNewlineSeparator <- didConsume newline
