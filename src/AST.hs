@@ -19,6 +19,9 @@ data Expression
     | RecordValue (Map.Map String Expression)
     | RecordUpdate String (Map.Map String Expression)
     | Variable String
+    | RecordAccess String
+    | QualifiedRecordAccess String String
+    | QualifiedModuleAccess String String
     | BinOp BinOp Expression Expression
     | Negate Expression
     deriving (Show, Eq)

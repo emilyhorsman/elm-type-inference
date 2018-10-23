@@ -17,10 +17,10 @@
     - [*] cons
     - [*] append
     - [*] Composition and application
-- [ ] Record accessors
+- [*] Record accessors
+- [*] Module accessors
 - [ ] Operator references (e.g., `lessThan = (<)`)
 - [ ] Pattern matching
 - [ ] Modules
-- [ ] Module accessors
 - [ ] Imports
 - [ ] Program of top-level functions

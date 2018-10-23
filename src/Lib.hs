@@ -1,5 +1,6 @@
 module Lib where
 
+import Control.Monad (liftM2)
 import Control.Monad.Combinators.Expr
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -98,7 +99,20 @@ expression =
 
 variable :: Parser Expression
 variable =
-    Variable <$> identifier
+    choice
+        -- Assumption here: an accessor beginning with an upper case character
+        -- is a module. e.g., List.map
+        [ try $ liftM2 QualifiedModuleAccess moduleName dottedIdentifier
+        , try $ liftM2 QualifiedRecordAccess identifier dottedIdentifier
+        , RecordAccess <$> dottedIdentifier
+        , Variable <$> identifier
+        ]
+  where
+    dottedIdentifier =
+        char '.' *> identifier
+
+    moduleName =
+        (:) <$> upperChar <*> many identifierChar
 
 
 ifExpression :: Parser Expression

@@ -225,6 +225,21 @@ main = hspec $ do
             parse recordUpdate "" "{ rec | x = 1 }" `shouldParse`
                 RecordUpdate "rec" (Map.fromList [("x", Int 1)])
 
+    describe "variable" $ do
+        it "parses an identifier" $
+            parse variable "" "foo" `shouldParse` (Variable "foo")
+
+        it "parses a record accessor" $
+            parse variable "" ".x" `shouldParse` (RecordAccess "x")
+
+        it "parses a qualified record accessor" $
+            parse variable "" "foo.x" `shouldParse`
+                QualifiedRecordAccess "foo" "x"
+
+        it "parses a qualified module accessor" $
+            parse variable "" "List.map" `shouldParse`
+                QualifiedModuleAccess "List" "map"
+
     describe "expression" $ do
         it "degrades into term" $ do
             parse expression "" "1" `shouldParse` (Int 1)
