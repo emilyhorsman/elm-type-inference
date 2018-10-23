@@ -20,6 +20,7 @@ data Expression
     | RecordUpdate String (Map.Map String Expression)
     | Variable String
     | BinOpL BinOpL Expression Expression
+    | BinOpR BinOpR Expression Expression
     deriving (Show, Eq)
 
 
@@ -39,4 +40,9 @@ data BinOpL
     | Multiply
     | Divide
     | IntegerDivide
+    deriving (Show, Eq)
+
+
+data BinOpR
+    = Exponentiation
     deriving (Show, Eq)

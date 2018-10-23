@@ -312,3 +312,14 @@ main = hspec $ do
                     Add
                     (Variable "a")
                     (BinOpL Multiply (Variable "b") (Variable "c"))
+
+        it "parses exponentiation" $
+            parse expression "" "2^3^f 1" `shouldParse`
+                BinOpR
+                    Exponentiation
+                    (Int 2)
+                    (BinOpR
+                        Exponentiation
+                        (Int 3)
+                        (FunctionApplication (Variable "f") (Int 1))
+                    )

@@ -36,3 +36,8 @@ divideOperator =
 intDivideOperator :: OpP
 intDivideOperator =
     BinOpL IntegerDivide <$ symbol "//"
+
+
+exponentiationOperator :: OpP
+exponentiationOperator =
+    BinOpR Exponentiation <$ symbol "^"
