@@ -337,3 +337,14 @@ main = hspec $ do
                     )
                     (Int 1)
                     (Int 0)
+
+        it "has cons and append" $
+            parse expression "" "x :: y :: [] ++ z" `shouldParse`
+                BinOp
+                    Cons
+                    (Variable "x")
+                    (BinOp
+                        Cons
+                        (Variable "y")
+                        (BinOp Append (List []) (Variable "z"))
+                    )

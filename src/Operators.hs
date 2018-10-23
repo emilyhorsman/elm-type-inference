@@ -1,11 +1,19 @@
 module Operators where
 
+import Text.Megaparsec
+import Text.Megaparsec.Char
+
 import AST
 import ParserDefinition
+import Utility
 import Whitespace
 
 
 type OpP = Parser (Expression -> Expression -> Expression)
+
+
+op n deterrent =
+    (lexeme . try) (string n <* notFollowedBy deterrent)
 
 
 functionApplicationJuxtaposition :: OpP
@@ -15,7 +23,8 @@ functionApplicationJuxtaposition =
 
 addOperator :: OpP
 addOperator =
-    BinOp Add <$ symbol "+"
+    BinOp Add <$ op "+" (char '+')
+    -- ^ Using op because of the ++ operator conflicting.
 
 
 minusOperator :: OpP
@@ -81,3 +90,13 @@ booleanAndOperator =
 booleanOrOperator :: OpP
 booleanOrOperator =
     BinOp BooleanOr <$ symbol "||"
+
+
+appendOperator :: OpP
+appendOperator =
+    BinOp Append <$ symbol "++"
+
+
+consOperator :: OpP
+consOperator =
+    BinOp Cons <$ symbol "::"

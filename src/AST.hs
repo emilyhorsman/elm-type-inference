@@ -48,4 +48,6 @@ data BinOp
     | GreaterThanEq
     | BooleanAnd
     | BooleanOr
+    | Append
+    | Cons
     deriving (Show, Eq)

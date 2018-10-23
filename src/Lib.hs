@@ -65,6 +65,9 @@ table =
     , [ InfixL addOperator
       , InfixL minusOperator
       ]
+    , [ InfixR appendOperator
+      , InfixR consOperator
+      ]
     , [ InfixN equalityOperator
       , InfixN noEqualityOperator
       , InfixN ltOperator
