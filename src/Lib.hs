@@ -11,6 +11,7 @@ import Text.Megaparsec.Debug
 import AST
 import Elm
 import Literals
+import Operators
 import ParserDefinition
 import Utility
 import Whitespace
@@ -53,9 +54,9 @@ term =
 
 
 table =
-    [ [ InfixL (FunctionApplication <$ symbol "")
+    [ [ InfixL functionApplicationJuxtaposition
       ]
-    , [ InfixL (BinOpL Add <$ symbol "+")
+    , [ InfixL addOperator
       ]
     ]
 
