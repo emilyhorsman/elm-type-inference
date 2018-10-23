@@ -1,10 +1,12 @@
 module Lib where
 
+import Control.Monad.Combinators.Expr
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Debug
 
 import AST
 import Elm
@@ -31,25 +33,39 @@ identifier =
         (lexeme . try) (parser >>= failIfReservedWord)
 
 
--- TODO: Remember Control.Monad.Combinators.Expr
-expression :: Parser Expression
-expression =
+term :: Parser Expression
+term =
     choice
-        [ numberLiteral
+        [ anonymousFunction
+        , letBinding
+        , ifExpression
+        , caseExpression
+        , variable
+        , numberLiteral
         , boolLiteral
         , charLiteral
         , singleLineStringLiteral
         , multiLineStringLiteral
-        , List <$> listLiteral
-        , Tuple <$> tupleLiteral
-        , ifExpression
-        , functionApplication
-        , anonymousFunction
-        , letBinding
-        , caseExpression
-        , recordValue
-        , recordUpdate
+        , try $ symbol "(" *> expression <* symbol ")"
+        , tupleExpression
+        , listExpression
         ]
+
+
+table =
+    [ [ InfixL (FunctionApplication <$ symbol "")
+      ]
+    ]
+
+
+expression :: Parser Expression
+expression =
+    makeExprParser term table
+
+
+variable :: Parser Expression
+variable =
+    Variable <$> identifier
 
 
 ifExpression :: Parser Expression
@@ -70,15 +86,18 @@ commaSeparatedExpressions left right =
     between (symbol left) (symbol right) $ expression `sepBy` symbol ","
 
 
-listLiteral :: Parser [Expression]
-listLiteral =
-    commaSeparatedExpressions "[" "]"
+listExpression :: Parser Expression
+listExpression =
+    fmap List $ commaSeparatedExpressions "[" "]"
 
 
--- TODO: #2 Tuples cannot have a single member.
-tupleLiteral :: Parser [Expression]
-tupleLiteral =
-    commaSeparatedExpressions "(" ")"
+tupleExpression :: Parser Expression
+tupleExpression = do
+    symbol "("
+    a <- expression
+    rest <- count' 1 2 $ symbol "," >> expression
+    symbol ")"
+    return $ Tuple (a : rest)
 
 
 function :: Parser Declaration
@@ -88,12 +107,6 @@ function = do
     parameters <- many identifier
     symbol "="
     BoundFunctionDefinition bindingName parameters <$> expression
-
-
-functionApplication :: Parser Expression
-functionApplication = do
-    bindingName <- identifier
-    FunctionApplication bindingName <$> many expression
 
 
 anonymousFunction :: Parser Expression

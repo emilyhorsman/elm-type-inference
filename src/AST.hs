@@ -12,12 +12,13 @@ data Expression
     | List [Expression]
     | Tuple [Expression]
     | If Expression Expression Expression
-    | FunctionApplication String [Expression]
+    | FunctionApplication Expression Expression
     | AnonymousFunction [String] Expression
     | LetBinding [Declaration] Expression
     | Case Expression [CaseBranch]
     | RecordValue (Map.Map String Expression)
     | RecordUpdate String (Map.Map String Expression)
+    | Variable String
     deriving (Show, Eq)
 
 

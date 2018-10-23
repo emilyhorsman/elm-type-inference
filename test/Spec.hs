@@ -93,26 +93,40 @@ main = hspec $ do
         it "accepts identifier" $
             parse identifier "" "foobar " `shouldParse` "foobar"
 
-    describe "listLiteral" $ do
+    describe "listExpression" $ do
         it "parses an empty list" $
-            parse listLiteral "" "[]" `shouldParse` []
+            parse listExpression "" "[]" `shouldParse` List []
 
         it "parses a list of bools" $
-            parse listLiteral "" "[ True, False, True ]" `shouldParse` [Bool True, Bool False, Bool True]
+            parse listExpression "" "[ True, False, True ]" `shouldParse`
+                List [Bool True, Bool False, Bool True]
 
         it "parses a list of numbers" $ do
-            parse listLiteral "" "[1, 2, 3]" `shouldParse` [Int 1, Int 2, Int 3]
-            parse listLiteral "" "[1.0, 2.0, 3.0]" `shouldParse` [Float 1, Float 2, Float 3]
+            parse listExpression "" "[1, 2, 3]" `shouldParse`
+                List [Int 1, Int 2, Int 3]
+            parse listExpression "" "[1.0, 2.0, 3.0]" `shouldParse`
+                List [Float 1, Float 2, Float 3]
 
         it "fails when member fails" $
-            parse listLiteral "" `shouldFailOn` "[4.]"
+            parse listExpression "" `shouldFailOn` "[4.]"
 
-    describe "tupleLiteral" $ do
-        it "parses an empty tuple" $
-            parse tupleLiteral "" "()" `shouldParse` []
+    describe "tupleExpression" $ do
+        it "parses a pair of bools" $
+            parse tupleExpression "" "( True, False )" `shouldParse`
+                Tuple [Bool True, Bool False]
 
-        it "parses a tuple of bools" $
-            parse tupleLiteral "" "( True, False )" `shouldParse` [Bool True, Bool False]
+        it "parses a triple of bools" $
+            parse tupleExpression "" "( True, False, False )" `shouldParse`
+                Tuple [Bool True, Bool False, Bool False]
+
+        it "fails on empty tuple" $
+            parse tupleExpression "" `shouldFailOn` "()"
+
+        it "fails on single member tuple" $
+            parse tupleExpression "" `shouldFailOn` "(1)"
+
+        it "fails on k > 3 tuple" $
+            parse tupleExpression "" `shouldFailOn` "(1,2,3,4)"
 
     describe "ifExpression" $ do
         it "parses an if statement" $
@@ -146,13 +160,6 @@ main = hspec $ do
         it "fails on invalid parameter names" $
             parse function "" `shouldFailOn` "x 1 = 1"
 
-    describe "functionApplication" $ do
-        it "applies a nullary function" $
-            parse functionApplication "" "x" `shouldParse` FunctionApplication "x" []
-
-        it "uses juxtaposition for argument application" $
-            parse functionApplication "" "x 1 2 3" `shouldParse` FunctionApplication "x" [Int 1, Int 2, Int 3]
-
     describe "anonymousFunction" $ do
         it "parses an anonymous function expression" $
             parse anonymousFunction "" "\\a -> 1" `shouldParse` AnonymousFunction ["a"] (Int 1)
@@ -165,7 +172,7 @@ main = hspec $ do
             parse letBinding "" "let x = True in x" `shouldParse`
                 LetBinding
                     [BoundFunctionDefinition "x" [] (Bool True)]
-                    (FunctionApplication "x" [])
+                    (Variable "x")
 
         it "parses multiple bindings separated by newlines" $
             let
@@ -193,7 +200,7 @@ main = hspec $ do
             let
                 result =
                     Case
-                        (FunctionApplication "foo" [])
+                        (Variable "foo")
                         [ CaseBranch (Int 1) (Int 1)
                         , CaseBranch (Int 2) (Int 2)
                         ]
@@ -219,14 +226,44 @@ main = hspec $ do
                 RecordUpdate "rec" (Map.fromList [("x", Int 1)])
 
     describe "expression" $ do
-        it "parses a nested tuple" $
-            parse expression "" "(((True), False))" `shouldParse` Tuple [Tuple [Tuple [Bool True], Bool False]]
+        it "degrades into term" $ do
+            parse expression "" "1" `shouldParse` (Int 1)
+            parse expression "" "x" `shouldParse` (Variable "x")
 
-        it "parses a nested list" $
-            parse expression "" "[[[True], [False]]]" `shouldParse` List [List [List [Bool True], List [Bool False]]]
+        it "parses a unary function" $
+            parse expression "" "x 1" `shouldParse`
+                FunctionApplication (Variable "x") (Int 1)
 
         it "parses function application in the predicate of an if statement" $
-            parse expression "" "if x 1 then 1 else 0" `shouldParse` If (FunctionApplication "x" [Int 1]) (Int 1) (Int 0)
+            parse expression "" "if x 1 then 1 else 0" `shouldParse`
+                If (FunctionApplication (Variable "x") (Int 1)) (Int 1) (Int 0)
+
+        it "has left associative function application" $
+            parse expression "" "f g 1 2" `shouldParse`
+                FunctionApplication
+                    (FunctionApplication
+                        (FunctionApplication (Variable "f") (Variable "g"))
+                        (Int 1)
+                    )
+                    (Int 2)
+
+        it "parenthesis override precedence" $
+            parse expression "" "f (g 1)" `shouldParse`
+                FunctionApplication
+                    (Variable "f")
+                    (FunctionApplication (Variable "g") (Int 1))
+
+        it "parses expression as lvalue of function application" $
+            parse expression "" "(if True then f else g) 1" `shouldParse`
+                FunctionApplication
+                    (If (Bool True) (Variable "f") (Variable "g"))
+                    (Int 1)
+
+        it "parses anonymous function as lvalue of function application" $
+            parse expression "" "(\\x -> x) 1" `shouldParse`
+                FunctionApplication
+                    (AnonymousFunction ["x"] (Variable "x"))
+                    (Int 1)
 
         it "parses case and let in if" $
             -- TODO: This is semantically invalid but pattern matching isn't
@@ -234,11 +271,22 @@ main = hspec $ do
             parse expression "" "if case x of 1 -> True then let a = 5 in a else 5" `shouldParse`
                 If
                     (Case
-                        (FunctionApplication "x" [])
+                        (Variable "x")
                         [CaseBranch (Int 1) (Bool True)]
                     )
                     (LetBinding
                         [BoundFunctionDefinition "a" [] (Int 5)]
-                        (FunctionApplication "a" [])
+                        (Variable "a")
                     )
                     (Int 5)
+
+        it "parses a nested tuple" $
+            parse expression "" "((1, 2), (1, 2))" `shouldParse`
+                Tuple
+                    [ Tuple [ Int 1, Int 2 ]
+                    , Tuple [ Int 1, Int 2 ]
+                    ]
+
+        it "parses a nested list" $
+            parse expression "" "[[[True], [False]]]" `shouldParse`
+                List [List [List [Bool True], List [Bool False]]]
