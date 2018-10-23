@@ -55,6 +55,8 @@ term =
 table =
     [ [ InfixL (FunctionApplication <$ symbol "")
       ]
+    , [ InfixL (BinOpL Add <$ symbol "+")
+      ]
     ]
 
 

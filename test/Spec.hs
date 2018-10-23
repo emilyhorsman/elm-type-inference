@@ -290,3 +290,14 @@ main = hspec $ do
         it "parses a nested list" $
             parse expression "" "[[[True], [False]]]" `shouldParse`
                 List [List [List [Bool True], List [Bool False]]]
+
+        it "parses addition" $
+            parse expression "" "a + b" `shouldParse`
+                BinOpL Add (Variable "a") (Variable "b")
+
+        it "parses function application with higher precedence than addition" $
+            parse expression "" "f a + f b" `shouldParse`
+                BinOpL
+                    Add
+                    (FunctionApplication (Variable "f") (Variable "a"))
+                    (FunctionApplication (Variable "f") (Variable "b"))

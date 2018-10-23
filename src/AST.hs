@@ -19,6 +19,7 @@ data Expression
     | RecordValue (Map.Map String Expression)
     | RecordUpdate String (Map.Map String Expression)
     | Variable String
+    | BinOpL BinOpL Expression Expression
     deriving (Show, Eq)
 
 
@@ -29,4 +30,13 @@ data CaseBranch
 
 data Declaration
     = BoundFunctionDefinition String [String] Expression
+    deriving (Show, Eq)
+
+
+data BinOpL
+    = Add
+    | Minus
+    | Multiply
+    | Divide
+    | IntegerDivide
     deriving (Show, Eq)
