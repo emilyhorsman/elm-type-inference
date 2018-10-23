@@ -349,7 +349,7 @@ main = hspec $ do
                         (BinOp Append (List []) (Variable "z"))
                     )
 
-        it "has composition and application" $
+        it "has rightwards composition and application" $
             parse expression "" "1 |> f >> f" `shouldParse`
                 BinOp
                     ApplyRight
@@ -359,6 +359,17 @@ main = hspec $ do
                         (Variable "f")
                         (Variable "f")
                     )
+
+        it "has leftwards composition and application" $
+            parse expression "" "f << f <| 1" `shouldParse`
+                BinOp
+                    ApplyLeft
+                    (BinOp
+                        ComposeLeft
+                        (Variable "f")
+                        (Variable "f")
+                    )
+                    (Int 1)
 
         it "handles unary minus" $
             parse expression "" "-1" `shouldParse`
@@ -370,3 +381,10 @@ main = hspec $ do
 
         it "fails on space after unary minus" $
             parse expression "" `shouldFailOn` "- 1"
+
+        it "handles > and <" $
+            parse expression "" "1 < 2 && 2 > 1" `shouldParse`
+                BinOp
+                    BooleanAnd
+                    (BinOp LessThan (Int 1) (Int 2))
+                    (BinOp GreaterThan (Int 2) (Int 1))

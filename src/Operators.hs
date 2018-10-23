@@ -70,7 +70,7 @@ noEqualityOperator =
 
 ltOperator :: OpP
 ltOperator =
-    BinOp LessThan <$ symbol "<"
+    BinOp LessThan <$ op "<" (oneOf "|<")
 
 
 lteOperator :: OpP
