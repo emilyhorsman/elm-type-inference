@@ -323,3 +323,6 @@ main = hspec $ do
                         (Int 3)
                         (FunctionApplication (Variable "f") (Int 1))
                     )
+
+        it "has non-associative comparison operators" $
+            parse expression "" `shouldFailOn` "a == b /= c"

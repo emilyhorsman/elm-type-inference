@@ -41,3 +41,33 @@ intDivideOperator =
 exponentiationOperator :: OpP
 exponentiationOperator =
     BinOp Exponentiation <$ symbol "^"
+
+
+equalityOperator :: OpP
+equalityOperator =
+    BinOp Equality <$ symbol "=="
+
+
+noEqualityOperator :: OpP
+noEqualityOperator =
+    BinOp NoEquality <$ symbol "/="
+
+
+ltOperator :: OpP
+ltOperator =
+    BinOp LessThan <$ symbol "<"
+
+
+lteOperator :: OpP
+lteOperator =
+    BinOp LessThanEq <$ symbol "<="
+
+
+gtOperator :: OpP
+gtOperator =
+    BinOp GreaterThan <$ symbol ">"
+
+
+gteOperator :: OpP
+gteOperator =
+    BinOp GreaterThanEq <$ symbol ">="

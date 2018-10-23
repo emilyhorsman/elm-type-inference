@@ -40,4 +40,10 @@ data BinOp
     | Divide
     | IntegerDivide
     | Exponentiation
+    | Equality
+    | NoEquality
+    | LessThan
+    | LessThanEq
+    | GreaterThan
+    | GreaterThanEq
     deriving (Show, Eq)
