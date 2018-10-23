@@ -53,6 +53,7 @@ term =
         ]
 
 
+-- Based on Basics.elm
 table =
     [ [ InfixL functionApplicationJuxtaposition
       ]
@@ -79,7 +80,8 @@ table =
       , InfixN gteOperator
       ]
     , [ InfixR booleanAndOperator
-      , InfixR booleanOrOperator
+      ]
+    , [ InfixR booleanOrOperator
       ]
     , [ InfixR applyLeftOperator
       , InfixL applyRightOperator

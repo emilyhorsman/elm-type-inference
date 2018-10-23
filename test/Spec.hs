@@ -331,9 +331,9 @@ main = hspec $ do
             parse expression "" "if a && b || c then 1 else 0" `shouldParse`
                 If
                     (BinOp
-                        BooleanAnd
-                        (Variable "a")
-                        (BinOp BooleanOr (Variable "b") (Variable "c"))
+                        BooleanOr
+                        (BinOp BooleanAnd (Variable "a") (Variable "b"))
+                        (Variable "c")
                     )
                     (Int 1)
                     (Int 0)
