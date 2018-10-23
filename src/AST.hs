@@ -20,6 +20,7 @@ data Expression
     | RecordUpdate String (Map.Map String Expression)
     | Variable String
     | BinOp BinOp Expression Expression
+    | Negate Expression
     deriving (Show, Eq)
 
 

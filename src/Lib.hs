@@ -55,7 +55,9 @@ term =
 
 -- Based on Basics.elm
 table =
-    [ [ InfixL functionApplicationJuxtaposition
+    [ [ Prefix unaryNegative
+      ]
+    , [ InfixL functionApplicationJuxtaposition
       ]
     , [ InfixL composeLeftOperator
       , InfixR composeRightOperator

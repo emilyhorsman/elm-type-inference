@@ -10,14 +10,14 @@
 - [*] Function application from ``lvalue'' expression
     - [*] `(if True then f else g) arg`
     - [*] `(\x -> x + 1) arg`
-- [ ] Record accessors
-- [ ] Built-in binary and unary operators
+- [*] Built-in binary and unary operators
     - [*] Arithemetic binary operators
     - [*] Comparison operators
-    - [ ] Unary binary operators
+    - [*] Unary binary operators
     - [*] cons
     - [*] append
     - [*] Composition and application
+- [ ] Record accessors
 - [ ] Operator references (e.g., `lessThan = (<)`)
 - [ ] Pattern matching
 - [ ] Modules

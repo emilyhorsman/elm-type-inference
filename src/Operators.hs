@@ -16,6 +16,12 @@ op n deterrent =
     (lexeme . try) (string n <* notFollowedBy deterrent)
 
 
+unaryNegative :: Parser (Expression -> Expression)
+unaryNegative =
+    -- Whitespace after unary minus operator is prohibited.
+    Negate <$ op "-" space1
+
+
 functionApplicationJuxtaposition :: OpP
 functionApplicationJuxtaposition =
     FunctionApplication <$ symbol ""

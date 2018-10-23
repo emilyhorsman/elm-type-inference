@@ -359,3 +359,14 @@ main = hspec $ do
                         (Variable "f")
                         (Variable "f")
                     )
+
+        it "handles unary minus" $
+            parse expression "" "-1" `shouldParse`
+                Negate (Int 1)
+
+        it "handles unary minus expression" $
+            parse expression "" "-(a + b)" `shouldParse`
+                Negate (BinOp Add (Variable "a") (Variable "b"))
+
+        it "fails on space after unary minus" $
+            parse expression "" `shouldFailOn` "- 1"
