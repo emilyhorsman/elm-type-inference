@@ -41,21 +41,30 @@ caseMultiplePatternsA = [r|case
 foo
 of
 1 -> 1
-2 -> 2|]
+_ -> 2|]
 
 
 caseMultiplePatternsB = [r|case foo of
   1 ->
       1
-  2 ->
+  _ ->
       2|]
 
 
 caseMultiplePatternsC = [r|case foo of 1 ->
     1
-            2 -> 2|]
+            _ -> 2|]
 
 
 caseInvalidIndentation = [r|case foo of
 1 -> 1
  2 -> 2|]
+
+
+caseNonTrivialPatterns = [r|case foo of
+    x :: y :: [] ->
+        (x, y)
+    (x :: xs as list) ->
+        (x, list)
+    _ ->
+        (foo, foo)|]

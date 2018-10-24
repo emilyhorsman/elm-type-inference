@@ -194,8 +194,8 @@ main = hspec $ do
 
     describe "caseExpression" $ do
         it "parses a single case" $
-            parse caseExpression "" "case True of 1 -> 1" `shouldParse`
-                Case (Bool True) [CaseBranch (PatternInt 1) (Int 1)]
+            parse caseExpression "" "case True of _ -> 1" `shouldParse`
+                Case (Bool True) [CaseBranch PatternAnything (Int 1)]
 
         it "parses multiple patterns separated by newlines" $
             let
@@ -203,7 +203,7 @@ main = hspec $ do
                     Case
                         (Variable "foo")
                         [ CaseBranch (PatternInt 1) (Int 1)
-                        , CaseBranch (PatternInt 2) (Int 2)
+                        , CaseBranch PatternAnything (Int 2)
                         ]
              in do
                 parse caseExpression "A" caseMultiplePatternsA `shouldParse` result
@@ -289,13 +289,11 @@ main = hspec $ do
                     (Int 1)
 
         it "parses case and let in if" $
-            -- TODO: This is semantically invalid but pattern matching isn't
-            -- implemented yet.
-            parse expression "" "if case x of 1 -> True then let a = 5 in a else 5" `shouldParse`
+            parse expression "" "if case x of _ -> True then let a = 5 in a else 5" `shouldParse`
                 If
                     (Case
                         (Variable "x")
-                        [CaseBranch (PatternInt 1) (Bool True)]
+                        [CaseBranch (PatternAnything) (Bool True)]
                     )
                     (LetBinding
                         [BoundFunctionDefinition "a" [] (Int 5)]
@@ -411,6 +409,27 @@ main = hspec $ do
                     BooleanAnd
                     (BinOp LessThan (Int 1) (Int 2))
                     (BinOp GreaterThan (Int 2) (Int 1))
+
+        it "parses a non-trivial case expression" $
+            parse expression "" caseNonTrivialPatterns `shouldParse`
+                Case
+                    (Variable "foo")
+                    [ CaseBranch
+                        (PatternCons
+                            (PatternVariable "x")
+                            (PatternCons (PatternVariable "y") (PatternList []))
+                        )
+                        (Tuple [Variable "x", Variable "y"])
+                    , CaseBranch
+                        (PatternAlias
+                            (PatternCons (PatternVariable "x") (PatternVariable "xs"))
+                            "list"
+                        )
+                        (Tuple [Variable "x", Variable "list"])
+                    , CaseBranch
+                        PatternAnything
+                        (Tuple [Variable "foo", Variable "foo"])
+                    ]
 
     describe "pattern" $ do
         it "parses underscore for anything" $
