@@ -411,3 +411,13 @@ main = hspec $ do
                     BooleanAnd
                     (BinOp LessThan (Int 1) (Int 2))
                     (BinOp GreaterThan (Int 2) (Int 1))
+
+    describe "pattern" $ do
+        it "parses underscore for anything" $
+            parse pattern "" "_" `shouldParse` PatternAnything
+
+        it "parses variable" $
+            parse pattern "" "foo" `shouldParse` PatternVariable "foo"
+
+        it "fails on expression-like variables" $
+            parse pattern "" `shouldFailOn` ".foo"

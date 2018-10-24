@@ -265,6 +265,7 @@ pattern =
         , PatternBool <$> boolLiteral
         , PatternChar <$> charLiteral
         , PatternString <$> singleLineStringLiteral
+        , PatternVariable <$> identifier
         ]
 
 
