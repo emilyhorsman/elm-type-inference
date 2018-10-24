@@ -147,7 +147,7 @@ tuple :: ([a] -> b) -> Parser a -> Parser b
 tuple dataConstructor parser = do
     symbol "("
     a <- parser
-    rest <- count' 1 2 $ symbol "," >> parser
+    rest <- count' 1 2 $ symbol "," *> parser
     symbol ")"
     return $ dataConstructor (a : rest)
 
