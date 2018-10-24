@@ -139,13 +139,19 @@ listExpression =
     fmap List $ commaSeparatedExpressions "[" "]"
 
 
-tupleExpression :: Parser Expression
-tupleExpression = do
+-- Generic tuple construction for tupleExpression and patternTuple
+tuple :: ([a] -> b) -> Parser a -> Parser b
+tuple dataConstructor parser = do
     symbol "("
-    a <- expression
-    rest <- count' 1 2 $ symbol "," >> expression
+    a <- parser
+    rest <- count' 1 2 $ symbol "," >> parser
     symbol ")"
-    return $ Tuple (a : rest)
+    return $ dataConstructor (a : rest)
+
+
+tupleExpression :: Parser Expression
+tupleExpression =
+    tuple Tuple expression
 
 
 function :: Parser Declaration
@@ -292,9 +298,5 @@ patternRecord =
 
 
 patternTuple :: Parser Pattern
-patternTuple = do
-    symbol "("
-    a <- pattern
-    rest <- count' 1 2 $ symbol "," >> pattern
-    symbol ")"
-    return $ PatternTuple (a : rest)
+patternTuple =
+    tuple PatternTuple pattern
