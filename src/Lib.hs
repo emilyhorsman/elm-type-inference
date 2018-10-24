@@ -160,9 +160,17 @@ tupleExpression =
 function :: Parser Declaration
 function = do
     bindingName <- identifier
-    parameters <- many pattern
+    -- `func x :: xs = …` is not valid Elm like `case x of x :: xs -> …` is.
+    -- The cons operator must be surrounded in parenthesis when used outside a
+    -- case branch.
+    parameters <- many (try patternCons <|> patternTerm)
     symbol "="
     BoundFunctionDefinition bindingName parameters <$> expression
+  where
+    patternCons = do
+        lhs <- pattern
+        symbol "::"
+        PatternCons lhs <$> pattern
 
 
 anonymousFunction :: Parser Expression

@@ -156,10 +156,36 @@ main = hspec $ do
             parse function "" "x = 1.5" `shouldParse` BoundFunctionDefinition "x" [] (Float 1.5)
 
         it "parses a simple ternary function" $
-            parse function "" "x a b c = 1" `shouldParse` BoundFunctionDefinition "x" ["a", "b", "c"] (Int 1)
+            parse function "" "x a b c = 1" `shouldParse`
+                BoundFunctionDefinition
+                    "x"
+                    [PatternVariable "a", PatternVariable "b", PatternVariable "c"]
+                    (Int 1)
 
-        it "fails on invalid parameter names" $
-            parse function "" `shouldFailOn` "x 1 = 1"
+        it "parses a pattern literal" $
+            parse function "" "x 1 = 1" `shouldParse`
+                BoundFunctionDefinition "x" [PatternInt 1] (Int 1)
+
+        it "fails on cons not surrounded in parenthesis" $
+            parse function "" `shouldFailOn` "func x :: xs = 1"
+
+        it "parses a cons pattern in parenthesis" $
+            parse function "" "func (x :: y :: []) = 1" `shouldParse`
+                BoundFunctionDefinition
+                    "func"
+                    [ PatternCons (PatternVariable "x")
+                        (PatternCons (PatternVariable "y") (PatternList []))
+                    ]
+                    (Int 1)
+
+        it "parses destructured parameters" $
+            parse function "" "func (x, y) {a, b} = 1" `shouldParse`
+                BoundFunctionDefinition
+                    "func"
+                    [ PatternTuple [PatternVariable "x", PatternVariable "y"]
+                    , PatternRecord ["a", "b"]
+                    ]
+                    (Int 1)
 
     describe "anonymousFunction" $ do
         it "parses an anonymous function expression" $

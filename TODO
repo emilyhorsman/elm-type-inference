@@ -20,9 +20,9 @@
 - [*] Record accessors
 - [*] Module accessors
 - [*] Operator references (e.g., `lessThan = (<)`)
-- [ ] Pattern matching
+- [*] Pattern matching
     - [*] CaseBranch
-    - [ ] Function parameters
+    - [*] Function parameters
 - [ ] Custom types
 - [ ] Custom types variant usages
 - [ ] Type aliases
