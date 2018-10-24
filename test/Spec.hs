@@ -187,6 +187,16 @@ main = hspec $ do
                     ]
                     (Int 1)
 
+        it "parses char and string matching" $
+            parse function "" "func 'x' \"hello\" _ = 1" `shouldParse`
+                BoundFunctionDefinition
+                    "func"
+                    [ PatternChar 'x'
+                    , PatternString "hello"
+                    , PatternAnything
+                    ]
+                    (Int 1)
+
     describe "anonymousFunction" $ do
         it "parses an anonymous function expression" $
             parse anonymousFunction "" "\\a -> 1" `shouldParse` AnonymousFunction ["a"] (Int 1)

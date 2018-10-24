@@ -233,7 +233,6 @@ caseExpression = do
 caseBranches :: Pos -> Parser [CaseBranch]
 caseBranches requiredIndentation = do
     indentation <- L.indentLevel
-    -- TODO: Actual pattern syntax
     pat <- pattern
     symbolNewline "->"
     body <- expression

@@ -62,17 +62,17 @@ escapedChar =
 
 charLiteral :: Parser Char
 charLiteral =
-    surroundedBy (char '\'') $ escapedChar <|> noneOf "'\\"
+    between (char '\'') (symbol "'") $ escapedChar <|> noneOf "'\\"
 
 
 singleLineStringLiteral :: Parser String
 singleLineStringLiteral =
-    surroundedBy (char '"') $
+    between (char '"') (symbol "\"") $
         many $ escapedChar <|> noneOf "\"\\\r\n"
 
 
 multiLineStringLiteral :: Parser String
 multiLineStringLiteral =
-    surround >> manyTill (escapedChar <|> noneOf "\\") surround
+    surround >> manyTill (escapedChar <|> noneOf "\\") (symbol "\"\"\"")
   where
     surround = count 3 (char '"')
