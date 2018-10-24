@@ -218,14 +218,7 @@ caseBranches :: Pos -> Parser [CaseBranch]
 caseBranches requiredIndentation = do
     indentation <- L.indentLevel
     -- TODO: Actual pattern syntax
-    pattern <- choice
-        [ variable
-        , numberLiteral
-        , Bool <$> boolLiteral
-        , Char <$> charLiteral
-        , String <$> singleLineStringLiteral
-        , String <$> multiLineStringLiteral
-        ]
+    pat <- pattern
     symbolNewline "->"
     body <- expression
     hasNewlineSeparator <- didConsume newline
@@ -235,9 +228,9 @@ caseBranches requiredIndentation = do
             L.incorrectIndent EQ requiredIndentation indentation
         (True, True) -> do
             cases <- caseBranches requiredIndentation
-            return $ (CaseBranch pattern body) : cases
+            return $ (CaseBranch pat body) : cases
         (False, True) -> do
-            return [CaseBranch pattern body]
+            return [CaseBranch pat body]
 
 
 recordValue :: Parser Expression
@@ -262,3 +255,19 @@ recordMemberBinding = do
     symbol "="
     value <- expression
     return (key, value)
+
+
+pattern :: Parser Pattern
+pattern =
+    choice
+        [ anything
+        , numberPattern
+        , PatternBool <$> boolLiteral
+        , PatternChar <$> charLiteral
+        , PatternString <$> singleLineStringLiteral
+        ]
+
+
+anything :: Parser Pattern
+anything =
+    PatternAnything <$ symbol "_"

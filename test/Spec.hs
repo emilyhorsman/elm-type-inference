@@ -195,15 +195,15 @@ main = hspec $ do
     describe "caseExpression" $ do
         it "parses a single case" $
             parse caseExpression "" "case True of 1 -> 1" `shouldParse`
-                Case (Bool True) [CaseBranch (Int 1) (Int 1)]
+                Case (Bool True) [CaseBranch (PatternInt 1) (Int 1)]
 
         it "parses multiple patterns separated by newlines" $
             let
                 result =
                     Case
                         (Variable "foo")
-                        [ CaseBranch (Int 1) (Int 1)
-                        , CaseBranch (Int 2) (Int 2)
+                        [ CaseBranch (PatternInt 1) (Int 1)
+                        , CaseBranch (PatternInt 2) (Int 2)
                         ]
              in do
                 parse caseExpression "A" caseMultiplePatternsA `shouldParse` result
@@ -295,7 +295,7 @@ main = hspec $ do
                 If
                     (Case
                         (Variable "x")
-                        [CaseBranch (Int 1) (Bool True)]
+                        [CaseBranch (PatternInt 1) (Bool True)]
                     )
                     (LetBinding
                         [BoundFunctionDefinition "a" [] (Int 5)]

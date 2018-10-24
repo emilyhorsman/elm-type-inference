@@ -21,6 +21,8 @@
 - [*] Module accessors
 - [*] Operator references (e.g., `lessThan = (<)`)
 - [ ] Pattern matching
+    - [ ] CaseBranch
+    - [ ] Function parameters
 - [ ] Modules
 - [ ] Imports
 - [ ] Program of top-level functions

@@ -31,6 +31,14 @@ numberLiteral = do
         else Int <$> numberLexeme
 
 
+numberPattern :: Parser Pattern
+numberPattern = do
+    candidate <- getInput
+    if '.' `elem` candidate
+        then PatternFloat <$> floatLexeme
+        else PatternInt <$> numberLexeme
+
+
 boolLiteral :: Parser Bool
 boolLiteral =
     choice

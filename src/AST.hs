@@ -28,7 +28,7 @@ data Expression
 
 
 data CaseBranch
-    = CaseBranch Expression Expression
+    = CaseBranch Pattern Expression
     deriving (Show, Eq)
 
 
@@ -58,4 +58,20 @@ data BinOp
     | ApplyRight
     | ComposeLeft
     | ComposeRight
+    deriving (Show, Eq)
+
+
+data Pattern
+    = PatternAnything
+    | PatternVariable String
+    | PatternString String
+    | PatternChar Char
+    | PatternInt Int
+    | PatternFloat Float
+    | PatternBool Bool
+    | PatternList [Pattern]
+    | PatternTuple [Pattern]
+    | PatternCons Pattern Pattern
+    | PatternRecord [String]
+    | PatternAlias Pattern String
     deriving (Show, Eq)
