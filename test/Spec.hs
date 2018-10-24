@@ -425,3 +425,21 @@ main = hspec $ do
         it "parses an alias" $
             parse pattern "" "(a as b)" `shouldParse`
                 PatternAlias (PatternVariable "a") "b"
+
+        it "parses record destructuring" $
+            parse pattern "" "{ a, b, c }" `shouldParse`
+                PatternRecord ["a", "b", "c"]
+
+        it "parses pair destructuring" $
+            parse pattern "" "(a, _)" `shouldParse`
+                PatternTuple [PatternVariable "a", PatternAnything]
+
+        it "parses triple destructuring" $
+            parse pattern "" "(a, _, b)" `shouldParse`
+                PatternTuple [PatternVariable "a", PatternAnything, PatternVariable "b"]
+
+        it "fails on empty tuple" $
+            parse pattern "" `shouldFailOn` "()"
+
+        it "fails on k=4 tuple" $
+            parse pattern "" `shouldFailOn` "(a, b, c, d)"

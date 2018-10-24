@@ -266,7 +266,9 @@ pattern =
         , PatternChar <$> charLiteral
         , PatternString <$> singleLineStringLiteral
         , PatternVariable <$> identifier
-        , patternAlias
+        , try patternAlias
+        , patternRecord
+        , patternTuple
         ]
 
 
@@ -281,3 +283,18 @@ patternAlias = do
     pat <- pattern
     symbol "as"
     PatternAlias pat <$> identifier <* symbol ")"
+
+
+patternRecord :: Parser Pattern
+patternRecord =
+    fmap PatternRecord $
+        between (symbol "{") (symbol "}") $ identifier `sepBy` symbol ","
+
+
+patternTuple :: Parser Pattern
+patternTuple = do
+    symbol "("
+    a <- pattern
+    rest <- count' 1 2 $ symbol "," >> pattern
+    symbol ")"
+    return $ PatternTuple (a : rest)
