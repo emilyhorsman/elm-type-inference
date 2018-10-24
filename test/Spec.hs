@@ -421,3 +421,7 @@ main = hspec $ do
 
         it "fails on expression-like variables" $
             parse pattern "" `shouldFailOn` ".foo"
+
+        it "parses an alias" $
+            parse pattern "" "(a as b)" `shouldParse`
+                PatternAlias (PatternVariable "a") "b"

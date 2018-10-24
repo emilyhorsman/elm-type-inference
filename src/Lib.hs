@@ -266,9 +266,18 @@ pattern =
         , PatternChar <$> charLiteral
         , PatternString <$> singleLineStringLiteral
         , PatternVariable <$> identifier
+        , patternAlias
         ]
 
 
 anything :: Parser Pattern
 anything =
     PatternAnything <$ symbol "_"
+
+
+patternAlias :: Parser Pattern
+patternAlias = do
+    symbol "("
+    pat <- pattern
+    symbol "as"
+    PatternAlias pat <$> identifier <* symbol ")"
