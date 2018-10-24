@@ -129,14 +129,17 @@ ifExpression = do
     If predicate trueResult <$> expression
 
 
-commaSeparatedExpressions :: String -> String -> Parser [Expression]
-commaSeparatedExpressions left right =
-    between (symbol left) (symbol right) $ expression `sepBy` symbol ","
+-- Generic list construction for listExpression and patternList
+list :: ([a] -> b) -> Parser a -> Parser b
+list dataConstructor parser =
+    fmap dataConstructor $
+        between (symbol "[") (symbol "]") $
+            parser `sepBy` symbol ","
 
 
 listExpression :: Parser Expression
 listExpression =
-    fmap List $ commaSeparatedExpressions "[" "]"
+    list List expression
 
 
 -- Generic tuple construction for tupleExpression and patternTuple
@@ -275,6 +278,7 @@ pattern =
         , try patternAlias
         , patternRecord
         , patternTuple
+        , patternList
         ]
 
 
@@ -300,3 +304,8 @@ patternRecord =
 patternTuple :: Parser Pattern
 patternTuple =
     tuple PatternTuple pattern
+
+
+patternList :: Parser Pattern
+patternList =
+    list PatternList pattern

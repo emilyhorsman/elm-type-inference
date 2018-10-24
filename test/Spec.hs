@@ -443,3 +443,10 @@ main = hspec $ do
 
         it "fails on k=4 tuple" $
             parse pattern "" `shouldFailOn` "(a, b, c, d)"
+
+        it "parses empty list" $
+            parse pattern "" "[]" `shouldParse` PatternList []
+
+        it "parses list destructuring" $
+            parse pattern "" "[a, _, b]" `shouldParse`
+                PatternList [PatternVariable "a", PatternAnything, PatternVariable "b"]
