@@ -472,3 +472,9 @@ main = hspec $ do
                 PatternCons
                     (PatternVariable "x")
                     (PatternAlias (PatternVariable "xs") "b")
+
+        it "parses superfluous parenthesis" $
+            parse pattern "" "(x :: (xs as b))" `shouldParse`
+                PatternCons
+                    (PatternVariable "x")
+                    (PatternAlias (PatternVariable "xs") "b")

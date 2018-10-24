@@ -283,6 +283,7 @@ patternTerm =
         , PatternString <$> singleLineStringLiteral
         , PatternVariable <$> identifier
         , try patternAlias
+        , try $ symbol "(" *> pattern <* symbol ")"
         , patternRecord
         , patternTuple
         , patternList
