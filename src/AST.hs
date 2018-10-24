@@ -33,7 +33,7 @@ data CaseBranch
 
 
 data Declaration
-    = BoundFunctionDefinition String [String] Expression
+    = BoundFunctionDefinition String [Pattern] Expression
     deriving (Show, Eq)
 
 

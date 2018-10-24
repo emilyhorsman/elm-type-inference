@@ -160,8 +160,7 @@ tupleExpression =
 function :: Parser Declaration
 function = do
     bindingName <- identifier
-    -- TODO: Support pattern matching
-    parameters <- many identifier
+    parameters <- many pattern
     symbol "="
     BoundFunctionDefinition bindingName parameters <$> expression
 
