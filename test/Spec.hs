@@ -450,3 +450,25 @@ main = hspec $ do
         it "parses list destructuring" $
             parse pattern "" "[a, _, b]" `shouldParse`
                 PatternList [PatternVariable "a", PatternAnything, PatternVariable "b"]
+
+        it "parses cons destructuring" $
+            parse pattern "" "x :: xs" `shouldParse`
+                PatternCons (PatternVariable "x") (PatternVariable "xs")
+
+        it "parses cons destructuring with right-associativity" $
+            parse pattern "" "x :: y :: []" `shouldParse`
+                PatternCons (PatternVariable "x")
+                    (PatternCons (PatternVariable "y") (PatternList []))
+
+        it "parses an aliased cons destructuring" $
+            parse pattern "" "(x :: y as list)" `shouldParse`
+                PatternAlias
+                    (PatternCons (PatternVariable "x") (PatternVariable "y"))
+                    "list"
+
+        it "parses an aliased cons destructuring RHS" $
+            -- Working on this is teaching me a lot about what Elm will allow.
+            parse pattern "" "x :: (xs as b)" `shouldParse`
+                PatternCons
+                    (PatternVariable "x")
+                    (PatternAlias (PatternVariable "xs") "b")

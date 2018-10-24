@@ -267,7 +267,14 @@ recordMemberBinding = do
 
 
 pattern :: Parser Pattern
-pattern =
+pattern = makeExprParser patternTerm
+    [ [ InfixR (PatternCons <$ symbol "::")
+      ]
+    ]
+
+
+patternTerm :: Parser Pattern
+patternTerm =
     choice
         [ anything
         , numberPattern
