@@ -21,8 +21,11 @@
 - [*] Module accessors
 - [*] Operator references (e.g., `lessThan = (<)`)
 - [ ] Pattern matching
-    - [ ] CaseBranch
+    - [*] CaseBranch
     - [ ] Function parameters
+- [ ] Custom types
+- [ ] Custom types variant usages
+- [ ] Type aliases
 - [ ] Modules
 - [ ] Imports
 - [ ] Program of top-level functions
