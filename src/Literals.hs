@@ -31,11 +31,11 @@ numberLiteral = do
         else Int <$> numberLexeme
 
 
-boolLiteral :: Parser Expression
+boolLiteral :: Parser Bool
 boolLiteral =
     choice
-        [ Bool True <$ symbol "True"
-        , Bool False <$ symbol "False"
+        [ True <$ symbol "True"
+        , False <$ symbol "False"
         ]
 
 
@@ -52,20 +52,19 @@ escapedChar =
         ] <?> "valid escape sequence: \\n, \\r, \\t, \\\", \\', \\\\"
 
 
-charLiteral :: Parser Expression
+charLiteral :: Parser Char
 charLiteral =
-    fmap Char $ surroundedBy (char '\'') $ escapedChar <|> noneOf "'\\"
+    surroundedBy (char '\'') $ escapedChar <|> noneOf "'\\"
 
 
-singleLineStringLiteral :: Parser Expression
+singleLineStringLiteral :: Parser String
 singleLineStringLiteral =
-    fmap String $
-        surroundedBy (char '"') $
-            many $ escapedChar <|> noneOf "\"\\\r\n"
+    surroundedBy (char '"') $
+        many $ escapedChar <|> noneOf "\"\\\r\n"
 
 
-multiLineStringLiteral :: Parser Expression
+multiLineStringLiteral :: Parser String
 multiLineStringLiteral =
-    fmap String $ surround >> manyTill (escapedChar <|> noneOf "\\") surround
+    surround >> manyTill (escapedChar <|> noneOf "\\") surround
   where
     surround = count 3 (char '"')

@@ -16,25 +16,25 @@ main :: IO ()
 main = hspec $ do
     describe "boolLiteral" $ do
         it "returns True" $
-            parse boolLiteral "" "True" `shouldParse` Bool True
+            parse boolLiteral "" "True" `shouldParse` True
 
         it "returns False" $
-            parse boolLiteral "" "False" `shouldParse` Bool False
+            parse boolLiteral "" "False" `shouldParse` False
 
         it "fails" $
             parse boolLiteral "" `shouldFailOn` "not a bool!"
 
     describe "charLiteral" $ do
         it "returns escaped char" $ do
-            parse charLiteral "" "'\\n'" `shouldParse` Char '\n'
-            parse charLiteral "" "'\\r'" `shouldParse` Char '\r'
-            parse charLiteral "" "'\\t'" `shouldParse` Char '\t'
-            parse charLiteral "" "'\\\"'" `shouldParse` Char '"'
-            parse charLiteral "" "'\\''" `shouldParse` Char '\''
-            parse charLiteral "" "'\\\\'" `shouldParse` Char '\\'
+            parse charLiteral "" "'\\n'" `shouldParse` '\n'
+            parse charLiteral "" "'\\r'" `shouldParse` '\r'
+            parse charLiteral "" "'\\t'" `shouldParse` '\t'
+            parse charLiteral "" "'\\\"'" `shouldParse` '"'
+            parse charLiteral "" "'\\''" `shouldParse` '\''
+            parse charLiteral "" "'\\\\'" `shouldParse` '\\'
 
         it "returns char" $
-            parse charLiteral "" "'a'" `shouldParse` Char 'a'
+            parse charLiteral "" "'a'" `shouldParse` 'a'
 
         it "fails on invalid escape sequence" $
             parse charLiteral "" `shouldFailOn` "'\\a'"
@@ -44,12 +44,12 @@ main = hspec $ do
 
     describe "singleLineStringLiteral" $ do
         it "returns string" $
-            parse singleLineStringLiteral "" "\"Hello\"" `shouldParse` String "Hello"
+            parse singleLineStringLiteral "" "\"Hello\"" `shouldParse` "Hello"
 
         it "returns string with escape sequences" $ do
-            parse singleLineStringLiteral "" "\"Hello\\n\"" `shouldParse` String "Hello\n"
-            parse singleLineStringLiteral "" "\"Hello\\\"\"" `shouldParse` String "Hello\""
-            parse singleLineStringLiteral "" "\" \\t \\r \\n \"" `shouldParse` String " \t \r \n "
+            parse singleLineStringLiteral "" "\"Hello\\n\"" `shouldParse` "Hello\n"
+            parse singleLineStringLiteral "" "\"Hello\\\"\"" `shouldParse` "Hello\""
+            parse singleLineStringLiteral "" "\" \\t \\r \\n \"" `shouldParse` " \t \r \n "
 
         it "cannot have a newline" $ do
             parse singleLineStringLiteral "" `shouldFailOn` "Hello\nGoodbye"
@@ -57,7 +57,7 @@ main = hspec $ do
 
     describe "multiLineStringLiteral" $
         it "returns string" $
-            parse multiLineStringLiteral "" "\"\"\"Hello\nGoodbye\"\"\"" `shouldParse` String "Hello\nGoodbye"
+            parse multiLineStringLiteral "" "\"\"\"Hello\nGoodbye\"\"\"" `shouldParse` "Hello\nGoodbye"
 
     describe "numberLexeme" $ do
         it "returns number" $ do

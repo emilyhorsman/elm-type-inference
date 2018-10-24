@@ -44,10 +44,10 @@ term =
         , caseExpression
         , variable
         , numberLiteral
-        , boolLiteral
-        , charLiteral
-        , singleLineStringLiteral
-        , multiLineStringLiteral
+        , Bool <$> boolLiteral
+        , Char <$> charLiteral
+        , String <$> singleLineStringLiteral
+        , String <$> multiLineStringLiteral
         , try $ symbol "(" *> expression <* symbol ")"
         , tupleExpression
         , listExpression
@@ -221,10 +221,10 @@ caseBranches requiredIndentation = do
     pattern <- choice
         [ variable
         , numberLiteral
-        , boolLiteral
-        , charLiteral
-        , singleLineStringLiteral
-        , multiLineStringLiteral
+        , Bool <$> boolLiteral
+        , Char <$> charLiteral
+        , String <$> singleLineStringLiteral
+        , String <$> multiLineStringLiteral
         ]
     symbolNewline "->"
     body <- expression
