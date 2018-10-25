@@ -533,3 +533,79 @@ main = hspec $ do
                 PatternCons
                     (PatternVariable "x")
                     (PatternAlias (PatternVariable "xs") "b")
+
+    describe "typeConstructorDefinition" $ do
+        it "parses a single variant" $
+            parse typeConstructorDefinition "" "type Foo = Bar" `shouldParse`
+                TypeConstructorDefinition "Foo" [] [Variant "Bar" []]
+
+        it "parses a variant with typed data" $
+            parse typeConstructorDefinition "" "type Foo = Bar String Int" `shouldParse`
+                TypeConstructorDefinition "Foo"
+                    []
+                    [Variant "Bar" [Type "String" [], Type "Int" []]]
+
+        it "parses a type constructor argument" $
+            parse typeConstructorDefinition "" "type Foo a = Bar a" `shouldParse`
+                TypeConstructorDefinition
+                    "Foo"
+                    [TypeConstructorArg "a"]
+                    [Variant "Bar" [TypeArg "a"]]
+
+        it "parses a variant with nested types" $
+            parse typeConstructorDefinition "" "type Foo a b = Bar Int (Maybe a) (Either a b)" `shouldParse`
+                TypeConstructorDefinition
+                    "Foo"
+                    [TypeConstructorArg "a", TypeConstructorArg "b"]
+                    [Variant
+                        "Bar"
+                        [ Type "Int" []
+                        , Type "Maybe" [TypeArg "a"]
+                        , Type "Either" [TypeArg "a", TypeArg "b"]
+                        ]
+                    ]
+
+        it "parses a variant with deeply nested types" $
+            parse typeConstructorDefinition "" "type Foo a = Bar (Maybe (Maybe a))" `shouldParse`
+                TypeConstructorDefinition
+                    "Foo"
+                    [TypeConstructorArg "a"]
+                    [Variant
+                        "Bar"
+                        [Type "Maybe"
+                            [Type "Maybe" [TypeArg "a"]]
+                        ]
+                    ]
+
+        it "parses multiple variants" $
+            parse typeConstructorDefinition "" "type Maybe a = Nothing | Just a" `shouldParse`
+                TypeConstructorDefinition
+                    "Maybe"
+                    [TypeConstructorArg "a"]
+                    [ Variant "Nothing" []
+                    , Variant "Just" [TypeArg "a"]
+                    ]
+
+        it "parses a tuple type" $
+            parse typeConstructorDefinition "" "type Point a = Point (a, a)" `shouldParse`
+                TypeConstructorDefinition
+                    "Point"
+                    [TypeConstructorArg "a"]
+                    [Variant "Point" [TupleType [TypeArg "a", TypeArg "a"]]]
+
+        it "parses a record type" $
+            parse typeConstructorDefinition "" "type Point a = Point { x : a, y : a }" `shouldParse`
+                TypeConstructorDefinition
+                    "Point"
+                    [TypeConstructorArg "a"]
+                    [Variant
+                        "Point"
+                        [RecordType (Map.fromList [("x", TypeArg "a"), ("y", TypeArg "a")])]
+                    ]
+
+        it "fails with an invalid variant" $
+            parse typeConstructorDefinition "" `shouldFailOn` "type Foo = (Int, Int)"
+
+        it "fails without any variants" $ do
+            parse typeConstructorDefinition "" `shouldFailOn` "type Foo"
+            parse typeConstructorDefinition "" `shouldFailOn` "type Foo ="

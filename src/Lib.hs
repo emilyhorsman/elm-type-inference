@@ -323,3 +323,8 @@ patternTuple =
 patternList :: Parser Pattern
 patternList =
     list PatternList pattern
+
+
+typeConstructorDefinition :: Parser TypeConstructorDefinition
+typeConstructorDefinition =
+    return $ TypeConstructorDefinition "" [] []

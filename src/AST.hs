@@ -75,3 +75,37 @@ data Pattern
     | PatternRecord [String]
     | PatternAlias Pattern String
     deriving (Show, Eq)
+
+
+-- Elm's documentation calls this a ``CustomType'' and makes no reference to
+-- ``type constructors`` but I reject this here because I don't find it clear
+-- enough in this AST.
+--
+-- Elm used to call these ``union types``.
+data TypeConstructorDefinition
+    = TypeConstructorDefinition String [TypeConstructorArg] [Variant]
+    deriving (Show, Eq)
+
+
+data TypeConstructorArg
+    = TypeConstructorArg String
+    deriving (Show, Eq)
+
+
+type VariantTag = String
+
+
+-- Elm's documentation seems use the name ``variants'' instead of
+-- ``data constructors''.
+data Variant
+    = Variant VariantTag [Type]
+    deriving (Show, Eq)
+
+
+-- This type should be accepted by both variants and signatures.
+data Type
+    = Type String [Type]
+    | TypeArg String
+    | TupleType [Type]
+    | RecordType (Map.Map String Type)
+    deriving (Show, Eq)
