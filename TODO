@@ -23,7 +23,7 @@
 - [*] Pattern matching
     - [*] CaseBranch
     - [*] Function parameters
-- [ ] Custom types
+- [*] Custom types
 - [ ] Custom types variant usages
 - [ ] Type aliases
 - [ ] Record constructor

@@ -352,6 +352,7 @@ typeParser =
         [ typeP
         , typeArgument
         , tupleType
+        , recordType
         ]
 
 
@@ -382,3 +383,17 @@ typeArgument =
 tupleType :: Parser Type
 tupleType =
     tuple TupleType typeParser
+
+
+recordType :: Parser Type
+recordType =
+    fmap (RecordType . Map.fromList) $
+        between (symbol "{") (symbol "}") $ recordMemberTypeAnnotation `sepBy` symbol ","
+
+
+recordMemberTypeAnnotation :: Parser (String, Type)
+recordMemberTypeAnnotation = do
+    key <- identifier
+    symbol ":"
+    annotation <- typeParser
+    return (key, annotation)
