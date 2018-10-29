@@ -343,4 +343,42 @@ typeConstructorDefinition = do
 variant :: Parser Variant
 variant = do
     tag <- constructorName
-    return $ Variant tag []
+    Variant tag <$> many typeParser
+
+
+typeParser :: Parser Type
+typeParser =
+    choice
+        [ typeP
+        , typeArgument
+        , tupleType
+        ]
+
+
+typeP :: Parser Type
+typeP =
+    choice
+        [ try precedence
+        , noPrecedence
+        ]
+  where
+    noPrecedence = do
+        name <- constructorName
+        return $ Type name []
+
+    precedence = do
+        symbol "("
+        name <- constructorName
+        args <- many typeParser
+        symbol ")"
+        return $ Type name args
+
+
+typeArgument :: Parser Type
+typeArgument =
+    TypeArg <$> identifier
+
+
+tupleType :: Parser Type
+tupleType =
+    tuple TupleType typeParser
