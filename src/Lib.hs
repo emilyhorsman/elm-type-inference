@@ -325,6 +325,22 @@ patternList =
     list PatternList pattern
 
 
+constructorName :: Parser String
+constructorName =
+    lexeme $ (:) <$> upperChar <*> many alphaNumChar
+
+
 typeConstructorDefinition :: Parser TypeConstructorDefinition
-typeConstructorDefinition =
-    return $ TypeConstructorDefinition "" [] []
+typeConstructorDefinition = do
+    symbol "type"
+    name <- constructorName
+    arguments <- many $ TypeConstructorArg <$> identifier
+    symbol "="
+    variants <- variant `sepBy1` (symbol "|")
+    return $ TypeConstructorDefinition name arguments variants
+
+
+variant :: Parser Variant
+variant = do
+    tag <- constructorName
+    return $ Variant tag []
