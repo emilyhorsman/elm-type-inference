@@ -609,3 +609,16 @@ main = hspec $ do
         it "fails without any variants" $ do
             parse typeConstructorDefinition "" `shouldFailOn` "type Foo"
             parse typeConstructorDefinition "" `shouldFailOn` "type Foo ="
+
+    describe "typeAlias" $ do
+        it "parses a simple type alias" $
+            parse typeAlias "" "type alias Name = String" `shouldParse`
+                TypeAlias "Name" (Type "String" [])
+
+        it "parses a record type alias" $
+            parse typeAlias "" "type alias Point = { x : Float, y : Float }" `shouldParse`
+                TypeAlias "Point"
+                    (RecordType
+                        (Map.fromList [("x", Type "Float" []), ("y", Type "Float" [])]
+                        )
+                    )

@@ -397,3 +397,11 @@ recordMemberTypeAnnotation = do
     symbol ":"
     annotation <- typeParser
     return (key, annotation)
+
+
+typeAlias :: Parser TypeAlias
+typeAlias = do
+    symbol "type alias"
+    name <- constructorName
+    symbol "="
+    TypeAlias name <$> typeParser

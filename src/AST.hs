@@ -77,6 +77,11 @@ data Pattern
     deriving (Show, Eq)
 
 
+data TypeAlias
+    = TypeAlias String Type
+    deriving (Show, Eq)
+
+
 -- Elm's documentation calls this a ``CustomType'' and makes no reference to
 -- ``type constructors`` but I reject this here because I don't find it clear
 -- enough in this AST.

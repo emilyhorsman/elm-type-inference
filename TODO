@@ -24,8 +24,8 @@
     - [*] CaseBranch
     - [*] Function parameters
 - [*] Custom types
+- [*] Type aliases
 - [ ] Custom types variant usages
-- [ ] Type aliases
 - [ ] Record constructor
 - [ ] Modules
 - [ ] Imports
