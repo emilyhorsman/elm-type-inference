@@ -449,7 +449,10 @@ moduleSymbols =
     p =
         choice
             [ ModuleFunction <$> identifier
-            , ModuleType <$> constructorName <*> typeSymbols
+            , try $ ModuleType <$> constructorName <*> typeSymbols
+            -- ^ typeSymbols is intentionally not optional because we don't
+            -- want just any failure to provide an empty [].
+            , ModuleType <$> constructorName <*> return []
             ]
 
 
