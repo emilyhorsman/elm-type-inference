@@ -467,5 +467,20 @@ typeSymbols =
 
 
 importStatement :: Parser ImportStatement
-importStatement =
-    return $ ImportStatement "Maybe" []
+importStatement = do
+    symbol "import"
+    name <- moduleName
+    choice
+        [ try $ QualifiedImportStatement name
+            <$> (symbol "as" *> moduleName) <*> unqualifiedImport
+        , ImportStatement name <$> unqualifiedImport
+        ]
+  where
+    unqualifiedImport =
+        [] <$ eof <|> symbol "exposing" *> syms
+
+    syms =
+        choice
+            [ [AllSymbols] <$ try (symbol "(..)")
+            , moduleSymbols
+            ]

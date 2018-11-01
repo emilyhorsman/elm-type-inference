@@ -28,7 +28,7 @@
 - [*] Custom types variant usages
     - [*] Patterns
     - [*] Expressions (it's just function application!)
-- [ ] Modules
-- [ ] Imports
+- [*] Modules
+- [*] Imports
 - [ ] Type annotations
 - [ ] Program of top-level functions

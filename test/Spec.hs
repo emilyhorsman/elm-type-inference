@@ -674,7 +674,7 @@ main = hspec $ do
 
     describe "importStatement" $ do
         it "parses a simple import statement" $
-            parse importStatement "" "import Html as H" `shouldParse`
+            parse importStatement "" "import Html" `shouldParse`
                 ImportStatement "Html" []
 
         it "parses an open import statement with all symbols" $
