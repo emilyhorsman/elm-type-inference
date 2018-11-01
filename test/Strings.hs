@@ -87,6 +87,10 @@ funcTypeAnnotationNested = [r|x : (Int -> Int) -> Int
 x _ = 1|]
 
 
+funcTypeAnnotationArgs = [r|x : Maybe a
+x = Nothing|]
+
+
 topLevelProgramSimpleA = [r|
 import Html exposing (..)
 

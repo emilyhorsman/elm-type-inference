@@ -255,6 +255,16 @@ main = hspec $ do
                     [ PatternAnything ]
                     (Int 1)
 
+        it "parses a type annotation with arguments" $
+            parse function "" funcTypeAnnotationArgs `shouldParse`
+                BoundFunctionDefinition
+                    (Just
+                        (Annotation (Type "Maybe" [TypeArg "a"]))
+                    )
+                    "x"
+                    []
+                    (Constructor "Nothing")
+
     describe "anonymousFunction" $ do
         it "parses an anonymous function expression" $
             parse anonymousFunction "" "\\a -> 1" `shouldParse` AnonymousFunction ["a"] (Int 1)

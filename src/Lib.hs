@@ -17,7 +17,6 @@ import ParserDefinition
 import Utility
 import Whitespace
 
-import Text.Megaparsec.Debug
 
 topLevelProgram :: Parser Program
 topLevelProgram = do
@@ -207,8 +206,7 @@ declarationAnnotation = do
     bindingName <- identifier
     symbol ":"
     tree <- annotation
-    many newline
-    many space1
+    space
     return $ (bindingName, tree)
 
 
@@ -223,7 +221,7 @@ annotationTerm :: Parser Annotation
 annotationTerm =
     choice
         [ try $ symbol "(" *> annotation <* symbol ")"
-        , Annotation <$> typeParser
+        , Annotation <$> typeParser True
         ]
 
 
@@ -417,17 +415,26 @@ typeConstructorDefinition = do
 variant :: Parser Variant
 variant = do
     tag <- constructorName
-    Variant tag <$> many typeParser
+    Variant tag <$> many (typeParser False)
 
 
-typeParser :: Parser Type
-typeParser =
+typeParser :: Bool -> Parser Type
+typeParser inAnnotation =
     choice
-        [ typeP
+        [ if inAnnotation then typePInAnnotation else typeP
         , typeArgument
         , tupleType
         , recordType
         ]
+
+
+-- This version is used in function annotations where we have a `->` separator
+-- and thus do not need parens for precedence in type arguments. There's
+-- probably a better way to do this.
+typePInAnnotation :: Parser Type
+typePInAnnotation = do
+    name <- constructorName
+    Type name <$> many (typeParser False)
 
 
 typeP :: Parser Type
@@ -444,7 +451,7 @@ typeP =
     precedence = do
         symbol "("
         name <- constructorName
-        args <- many typeParser
+        args <- many $ typeParser False
         symbol ")"
         return $ Type name args
 
@@ -456,7 +463,7 @@ typeArgument =
 
 tupleType :: Parser Type
 tupleType =
-    tuple TupleType typeParser
+    tuple TupleType $ typeParser False
 
 
 recordType :: Parser Type
@@ -469,7 +476,7 @@ recordMemberTypeAnnotation :: Parser (String, Type)
 recordMemberTypeAnnotation = do
     key <- identifier
     symbol ":"
-    annotation <- typeParser
+    annotation <- typeParser False
     return (key, annotation)
 
 
@@ -478,7 +485,7 @@ typeAlias = do
     symbol "type alias"
     name <- constructorName
     symbol "="
-    TypeAlias name <$> typeParser
+    TypeAlias name <$> typeParser False
 
 
 moduleName = constructorName
