@@ -25,9 +25,9 @@
     - [*] Function parameters
 - [*] Custom types
 - [*] Type aliases
-- [ ] Custom types variant usages
+- [*] Custom types variant usages
     - [*] Patterns
-    - [ ] Expressions
+    - [*] Expressions (it's just function application!)
 - [ ] Modules
 - [ ] Imports
 - [ ] Program of top-level functions

@@ -24,6 +24,7 @@ data Expression
     | QualifiedModuleAccess String String
     | BinOp BinOp Expression Expression
     | Negate Expression
+    | Constructor String
     deriving (Show, Eq)
 
 

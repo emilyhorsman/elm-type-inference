@@ -42,12 +42,12 @@ term =
         , letBinding
         , ifExpression
         , caseExpression
-        , variable
         , numberLiteral
         , Bool <$> boolLiteral
         , Char <$> charLiteral
         , String <$> singleLineStringLiteral
         , String <$> multiLineStringLiteral
+        , variable
         , try $ symbol "(" *> expression <* symbol ")"
         , tupleExpression
         , listExpression
@@ -107,6 +107,7 @@ variable =
         , try $ liftM2 QualifiedRecordAccess identifier dottedIdentifier
         , RecordAccess <$> dottedIdentifier
         , Variable <$> identifier
+        , Constructor <$> constructorName
         ]
   where
     dottedIdentifier =

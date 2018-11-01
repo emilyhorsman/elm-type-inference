@@ -467,6 +467,11 @@ main = hspec $ do
                         (Tuple [Variable "foo", Variable "foo"])
                     ]
 
+        it "parses data constructors" $
+            parse expression "" "Just (Just 1)" `shouldParse`
+                FunctionApplication (Constructor "Just")
+                    (FunctionApplication (Constructor "Just") (Int 1))
+
     describe "pattern" $ do
         it "parses underscore for anything" $
             parse pattern "" "_" `shouldParse` PatternAnything
