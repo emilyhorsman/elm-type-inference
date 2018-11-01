@@ -657,6 +657,13 @@ main = hspec $ do
                     , ModuleFunction "foo"
                     ]
 
+        it "parses a module statement exposing a qualified type" $
+            parse moduleStatement "" "module Main exposing (main, Maybe)" `shouldParse`
+                ModuleStatement "Main"
+                    [ ModuleFunction "main"
+                    , ModuleType "Maybe" []
+                    ]
+
         it "parses a module statement exposing types" $
             parse moduleStatement "" "module Main exposing (Maybe(Just, Nothing), Either(..), main)" `shouldParse`
                 ModuleStatement "Main"

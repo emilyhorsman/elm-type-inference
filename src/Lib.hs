@@ -428,9 +428,39 @@ typeAlias = do
     TypeAlias name <$> typeParser
 
 
+moduleName = constructorName
+
+
 moduleStatement :: Parser ModuleStatement
-moduleStatement =
-    return $ ModuleStatement "Main" []
+moduleStatement = do
+    symbol "module"
+    name <- moduleName
+    symbol "exposing"
+    ModuleStatement name <$> choice
+        [ [AllSymbols] <$ try (symbol "(..)")
+        , moduleSymbols
+        ]
+
+
+moduleSymbols :: Parser [ModuleSymbol]
+moduleSymbols =
+    symbol "(" *> p `sepBy` symbol "," <* symbol ")"
+  where
+    p =
+        choice
+            [ ModuleFunction <$> identifier
+            , ModuleType <$> constructorName <*> typeSymbols
+            ]
+
+
+typeSymbols :: Parser [TypeSymbol]
+typeSymbols =
+    choice
+        [ [AllVariants] <$ try (symbol "(..)")
+        , symbol "(" *> sym <* symbol ")"
+        ]
+  where
+    sym = (TypeSymbol <$> constructorName) `sepBy` symbol ", "
 
 
 importStatement :: Parser ImportStatement
