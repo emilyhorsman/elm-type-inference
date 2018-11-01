@@ -772,3 +772,21 @@ main = hspec $ do
         it "parses a qualified open import" $
             parse importStatement "" "import Html as H exposing (..)" `shouldParse`
                 QualifiedImportStatement "Html" "H" [AllSymbols]
+
+    describe "topLevelProgram" $ do
+        it "parses a simple program" $
+            let
+                result =
+                    Program
+                        Nothing
+                        [ Left (ImportStatement "Html" [AllSymbols])
+                        , Right
+                            (BoundFunctionDefinition
+                                Nothing
+                                "main"
+                                []
+                                (FunctionApplication (Variable "text") (String "Hello"))
+                            )
+                        ]
+            in
+                parse topLevelProgram "" topLevelProgramSimple `shouldParse` result

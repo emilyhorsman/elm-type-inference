@@ -85,3 +85,11 @@ x _ _ = (1, 2)|]
 
 funcTypeAnnotationNested = [r|x : (Int -> Int) -> Int
 x _ = 1|]
+
+
+topLevelProgramSimple = [r|
+import Html exposing (..)
+
+
+main = text "Hello"
+|]

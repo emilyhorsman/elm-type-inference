@@ -3,6 +3,11 @@ module AST where
 import qualified Data.Map.Strict as Map
 
 
+data Program
+    = Program (Maybe ModuleStatement) [Either ImportStatement Declaration]
+    deriving (Show, Eq)
+
+
 data Expression
     = Char Char
     | String String

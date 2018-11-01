@@ -17,6 +17,23 @@ import ParserDefinition
 import Utility
 import Whitespace
 
+import Text.Megaparsec.Debug
+
+topLevelProgram :: Parser Program
+topLevelProgram = do
+    space
+    maybeModuleStatement <- optional $ try $ moduleStatement <* newline
+    space
+    declarations <- statements `sepEndBy` many (newline <* space)
+    eof
+    return $ Program maybeModuleStatement declarations
+  where
+    statements =
+        choice
+            [ Left <$> importStatement
+            , Right <$> function <?> "function definition"
+            ]
+
 
 identifierLeadingChar = lowerChar
 identifierChar = alphaNumChar
