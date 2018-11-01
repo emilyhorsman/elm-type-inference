@@ -10,6 +10,7 @@ import Lib
 import Literals
 import Operators (operators)
 import Strings
+import TestUtility
 
 
 main :: IO ()
@@ -792,3 +793,23 @@ main = hspec $ do
                 parse topLevelProgram "" topLevelProgramSimpleA `shouldParse` result
                 parse topLevelProgram "" topLevelProgramSimpleB `shouldParse` result
                 parse topLevelProgram "" topLevelProgramSimpleC `shouldParse` result
+
+        it "parses a simple program with module" $
+            let
+                result =
+                    Program
+                        (Just (ModuleStatement "Simple" [AllSymbols]))
+                        [ Left (ImportStatement "Html" [AllSymbols])
+                        , Right
+                            (BoundFunctionDefinition
+                                (Just
+                                    (Annotation (Type "Html" [TypeArg "a"]))
+                                )
+                                "main"
+                                []
+                                (FunctionApplication (Variable "text") (String "Hello"))
+                            )
+                        ]
+
+            in
+                testParserWithFile topLevelProgram "Simple.elm" result
