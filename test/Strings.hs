@@ -80,7 +80,7 @@ x = 1|]
 
 
 funcTypeAnnotation = [r|x : Int -> Int -> (Int, Int)
-x _ _ = { a = 1, b = 2 }|]
+x _ _ = (1, 2)|]
 
 
 funcTypeAnnotationNested = [r|x : (Int -> Int) -> Int

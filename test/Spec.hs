@@ -236,7 +236,7 @@ main = hspec $ do
                     [ PatternAnything
                     , PatternAnything
                     ]
-                    (RecordValue $ Map.fromList [("a", Int 1), ("b", Int 2)])
+                    (Tuple [Int 1, Int 2])
 
         it "parses a type annotation with precedence" $
             parse function "" funcTypeAnnotationNested `shouldParse`

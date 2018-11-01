@@ -160,18 +160,53 @@ tupleExpression =
 
 function :: Parser Declaration
 function = do
+    maybeAnnotation <- optional $ try declarationAnnotation
     bindingName <- identifier
     -- `func x :: xs = …` is not valid Elm like `case x of x :: xs -> …` is.
     -- The cons operator must be surrounded in parenthesis when used outside a
     -- case branch.
     parameters <- many (try patternCons <|> patternTerm)
     symbol "="
-    BoundFunctionDefinition Nothing bindingName parameters <$> expression
+    case maybeAnnotation of
+        Just (annotationBindingName, tree) ->
+            if annotationBindingName == bindingName then
+                BoundFunctionDefinition (Just tree) bindingName parameters <$> expression
+            else
+                fail $ "`" ++ annotationBindingName ++ "` annotation must be followed by definition."
+
+        Nothing ->
+            BoundFunctionDefinition Nothing bindingName parameters <$> expression
+
   where
     patternCons = do
         lhs <- pattern
         symbol "::"
         PatternCons lhs <$> pattern
+
+
+declarationAnnotation :: Parser (String, Annotation)
+declarationAnnotation = do
+    bindingName <- identifier
+    symbol ":"
+    tree <- annotation
+    many newline
+    many space1
+    return $ (bindingName, tree)
+
+
+annotation :: Parser Annotation
+annotation =
+    makeExprParser annotationTerm
+        [ [ InfixR (BinAnnotation <$ symbol "->")
+          ]
+        ]
+
+annotationTerm :: Parser Annotation
+annotationTerm =
+    choice
+        [ try $ symbol "(" *> annotation <* symbol ")"
+        , Annotation <$> typeParser
+        ]
 
 
 anonymousFunction :: Parser Expression
