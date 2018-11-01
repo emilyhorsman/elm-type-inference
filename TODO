@@ -26,7 +26,8 @@
 - [*] Custom types
 - [*] Type aliases
 - [ ] Custom types variant usages
-- [ ] Record constructor
+    - [*] Patterns
+    - [ ] Expressions
 - [ ] Modules
 - [ ] Imports
 - [ ] Program of top-level functions

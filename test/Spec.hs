@@ -534,6 +534,23 @@ main = hspec $ do
                     (PatternVariable "x")
                     (PatternAlias (PatternVariable "xs") "b")
 
+        it "parses a data constructor" $
+            parse pattern "" "Nothing" `shouldParse`
+                PatternConstructor "Nothing" []
+
+        it "parses a data constructor with arguments" $
+            parse pattern "" "(Just x y)" `shouldParse`
+                PatternConstructor "Just"
+                    [PatternVariable "x", PatternVariable "y"]
+
+        it "parses a nested data constructor" $
+            parse pattern "" "(Just (Just {a, b}))" `shouldParse`
+                PatternConstructor "Just"
+                    [PatternConstructor "Just"
+                        [PatternRecord ["a", "b"]
+                        ]
+                    ]
+
     describe "typeConstructorDefinition" $ do
         it "parses a single variant" $
             parse typeConstructorDefinition "" "type Foo = Bar" `shouldParse`

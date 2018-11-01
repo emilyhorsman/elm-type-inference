@@ -289,6 +289,7 @@ patternTerm =
         , PatternString <$> singleLineStringLiteral
         , PatternVariable <$> identifier
         , try patternAlias
+        , try patternConstructor
         , try $ symbol "(" *> pattern <* symbol ")"
         , patternRecord
         , patternTuple
@@ -299,6 +300,25 @@ patternTerm =
 anything :: Parser Pattern
 anything =
     PatternAnything <$ symbol "_"
+
+
+patternConstructor :: Parser Pattern
+patternConstructor =
+    choice
+        [ try precedence
+        , noPrecedence
+        ]
+  where
+    noPrecedence = do
+        name <- constructorName
+        return $ PatternConstructor name []
+
+    precedence = do
+        symbol "("
+        name <- constructorName
+        args <- many pattern
+        symbol ")"
+        return $ PatternConstructor name args
 
 
 patternAlias :: Parser Pattern

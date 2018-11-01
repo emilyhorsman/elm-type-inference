@@ -74,6 +74,7 @@ data Pattern
     | PatternCons Pattern Pattern
     | PatternRecord [String]
     | PatternAlias Pattern String
+    | PatternConstructor String [Pattern]
     deriving (Show, Eq)
 
 
