@@ -149,22 +149,32 @@ main = hspec $ do
 
     describe "function" $ do
         it "parses a simple nullary function" $ do
-            parse function "" "x = \"hello\"" `shouldParse` BoundFunctionDefinition "x" [] (String "hello")
-            parse function "" "x = 'c'" `shouldParse` BoundFunctionDefinition "x" [] (Char 'c')
-            parse function "" "x = True" `shouldParse` BoundFunctionDefinition "x" [] (Bool True)
-            parse function "" "x = 1" `shouldParse` BoundFunctionDefinition "x" [] (Int 1)
-            parse function "" "x = 1.5" `shouldParse` BoundFunctionDefinition "x" [] (Float 1.5)
+            parse function "" "x = \"hello\"" `shouldParse`
+                BoundFunctionDefinition Nothing "x" [] (String "hello")
+
+            parse function "" "x = 'c'" `shouldParse`
+                BoundFunctionDefinition Nothing "x" [] (Char 'c')
+
+            parse function "" "x = True" `shouldParse`
+                BoundFunctionDefinition Nothing "x" [] (Bool True)
+
+            parse function "" "x = 1" `shouldParse`
+                BoundFunctionDefinition Nothing "x" [] (Int 1)
+
+            parse function "" "x = 1.5" `shouldParse`
+                BoundFunctionDefinition Nothing "x" [] (Float 1.5)
 
         it "parses a simple ternary function" $
             parse function "" "x a b c = 1" `shouldParse`
                 BoundFunctionDefinition
+                    Nothing
                     "x"
                     [PatternVariable "a", PatternVariable "b", PatternVariable "c"]
                     (Int 1)
 
         it "parses a pattern literal" $
             parse function "" "x 1 = 1" `shouldParse`
-                BoundFunctionDefinition "x" [PatternInt 1] (Int 1)
+                BoundFunctionDefinition Nothing "x" [PatternInt 1] (Int 1)
 
         it "fails on cons not surrounded in parenthesis" $
             parse function "" `shouldFailOn` "func x :: xs = 1"
@@ -172,6 +182,7 @@ main = hspec $ do
         it "parses a cons pattern in parenthesis" $
             parse function "" "func (x :: y :: []) = 1" `shouldParse`
                 BoundFunctionDefinition
+                    Nothing
                     "func"
                     [ PatternCons (PatternVariable "x")
                         (PatternCons (PatternVariable "y") (PatternList []))
@@ -181,6 +192,7 @@ main = hspec $ do
         it "parses destructured parameters" $
             parse function "" "func (x, y) {a, b} = 1" `shouldParse`
                 BoundFunctionDefinition
+                    Nothing
                     "func"
                     [ PatternTuple [PatternVariable "x", PatternVariable "y"]
                     , PatternRecord ["a", "b"]
@@ -190,11 +202,56 @@ main = hspec $ do
         it "parses char and string matching" $
             parse function "" "func 'x' \"hello\" _ = 1" `shouldParse`
                 BoundFunctionDefinition
+                    Nothing
                     "func"
                     [ PatternChar 'x'
                     , PatternString "hello"
                     , PatternAnything
                     ]
+                    (Int 1)
+
+        it "parses a unary type annotation" $
+            parse function "" funcTypeUnaryAnnotation `shouldParse`
+                BoundFunctionDefinition
+                    (Just
+                        (Annotation (Type "Int" []))
+                    )
+                    "x"
+                    []
+                    (Int 1)
+
+        it "parses a type annotation" $
+            parse function "" funcTypeAnnotation `shouldParse`
+                BoundFunctionDefinition
+                    (Just
+                        (BinAnnotation
+                            (Annotation (Type "Int" []))
+                            (BinAnnotation
+                                (Annotation (Type "Int" []))
+                                (Annotation (TupleType [Type "Int" [], Type "Int" []]))
+                            )
+                        )
+                    )
+                    "x"
+                    [ PatternAnything
+                    , PatternAnything
+                    ]
+                    (RecordValue $ Map.fromList [("a", Int 1), ("b", Int 2)])
+
+        it "parses a type annotation with precedence" $
+            parse function "" funcTypeAnnotationNested `shouldParse`
+                BoundFunctionDefinition
+                    (Just
+                        (BinAnnotation
+                            (BinAnnotation
+                                (Annotation (Type "Int" []))
+                                (Annotation (Type "Int" []))
+                            )
+                            (Annotation (Type "Int" []))
+                        )
+                    )
+                    "x"
+                    [ PatternAnything ]
                     (Int 1)
 
     describe "anonymousFunction" $ do
@@ -208,15 +265,15 @@ main = hspec $ do
         it "parses a single binding" $
             parse letBinding "" "let x = True in x" `shouldParse`
                 LetBinding
-                    [BoundFunctionDefinition "x" [] (Bool True)]
+                    [BoundFunctionDefinition Nothing "x" [] (Bool True)]
                     (Variable "x")
 
         it "parses multiple bindings separated by newlines" $
             let
                 result =
                     LetBinding
-                        [ BoundFunctionDefinition "x" [] (Bool True)
-                        , BoundFunctionDefinition "y" [] (Bool True)
+                        [ BoundFunctionDefinition Nothing "x" [] (Bool True)
+                        , BoundFunctionDefinition Nothing "y" [] (Bool True)
                         ]
                         (Int 0)
              in do
@@ -227,6 +284,22 @@ main = hspec $ do
         it "fails on mismatching indentation" $ do
             parse letBinding "A" `shouldFailOn` letBindingTwoBindingsInvalidIndentationA
             parse letBinding "B" `shouldFailOn` letBindingTwoBindingsInvalidIndentationB
+
+        it "parses a type annotation" $ do
+            parse letBinding "" letBindingTypeAnnotation `shouldParse`
+                LetBinding
+                    [ BoundFunctionDefinition
+                        (Just
+                            (BinAnnotation
+                                (Annotation (Type "Bool" []))
+                                (Annotation (Type "Int" []))
+                            )
+                        )
+                        "x"
+                        [PatternVariable "y"]
+                        (Int 1)
+                    ]
+                    (FunctionApplication (Variable "x") (Bool True))
 
     describe "caseExpression" $ do
         it "parses a single case" $
@@ -332,7 +405,7 @@ main = hspec $ do
                         [CaseBranch (PatternAnything) (Bool True)]
                     )
                     (LetBinding
-                        [BoundFunctionDefinition "a" [] (Int 5)]
+                        [BoundFunctionDefinition Nothing "a" [] (Int 5)]
                         (Variable "a")
                     )
                     (Int 5)

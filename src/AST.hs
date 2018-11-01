@@ -34,7 +34,13 @@ data CaseBranch
 
 
 data Declaration
-    = BoundFunctionDefinition String [Pattern] Expression
+    = BoundFunctionDefinition (Maybe Annotation) String [Pattern] Expression
+    deriving (Show, Eq)
+
+
+data Annotation
+    = BinAnnotation Annotation Annotation
+    | Annotation Type
     deriving (Show, Eq)
 
 

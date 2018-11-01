@@ -166,7 +166,7 @@ function = do
     -- case branch.
     parameters <- many (try patternCons <|> patternTerm)
     symbol "="
-    BoundFunctionDefinition bindingName parameters <$> expression
+    BoundFunctionDefinition Nothing bindingName parameters <$> expression
   where
     patternCons = do
         lhs <- pattern

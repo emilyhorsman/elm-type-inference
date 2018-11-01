@@ -30,6 +30,11 @@ letBindingTwoBindingsInvalidIndentationB = [r|let
  y = True in 0|]
 
 
+letBindingTypeAnnotation = [r|let
+    x : Bool -> Int
+    x y = 1 in x True|]
+
+
 multiLineIfExpression = [r|if True
   then
     0
@@ -68,3 +73,15 @@ caseNonTrivialPatterns = [r|case foo of
         (x, list)
     _ ->
         (foo, foo)|]
+
+
+funcTypeUnaryAnnotation = [r|x : Int
+x = 1|]
+
+
+funcTypeAnnotation = [r|x : Int -> Int -> (Int, Int)
+x _ _ = { a = 1, b = 2 }|]
+
+
+funcTypeAnnotationNested = [r|x : (Int -> Int) -> Int
+x _ = 1|]
