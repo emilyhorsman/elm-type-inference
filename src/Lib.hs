@@ -51,6 +51,7 @@ term =
         , try $ symbol "(" *> expression <* symbol ")"
         , tupleExpression
         , listExpression
+        , recordValue
         ]
 
 

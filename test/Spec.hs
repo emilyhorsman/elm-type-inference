@@ -421,6 +421,10 @@ main = hspec $ do
             parse expression "" "[[[True], [False]]]" `shouldParse`
                 List [List [List [Bool True], List [Bool False]]]
 
+        it "parses a record value" $
+            parse expression "" "{ a = 1 }" `shouldParse`
+                RecordValue (Map.fromList [("a", Int 1)])
+
         it "parses addition" $
             parse expression "" "a + b" `shouldParse`
                 BinOp Add (Variable "a") (Variable "b")
