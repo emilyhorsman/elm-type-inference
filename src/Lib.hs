@@ -426,3 +426,13 @@ typeAlias = do
     name <- constructorName
     symbol "="
     TypeAlias name <$> typeParser
+
+
+moduleStatement :: Parser ModuleStatement
+moduleStatement =
+    return $ ModuleStatement "Main" []
+
+
+importStatement :: Parser ImportStatement
+importStatement =
+    return $ ImportStatement "Maybe" []

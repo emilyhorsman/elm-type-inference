@@ -116,3 +116,27 @@ data Type
     | TupleType [Type]
     | RecordType (Map.Map String Type)
     deriving (Show, Eq)
+
+
+data ModuleStatement
+    = ModuleStatement String [ModuleSymbol]
+    deriving (Show, Eq)
+
+
+data ImportStatement
+    = ImportStatement String [ModuleSymbol]
+    | QualifiedImportStatement String String [ModuleSymbol]
+    deriving (Show, Eq)
+
+
+data ModuleSymbol
+    = AllSymbols
+    | ModuleFunction String
+    | ModuleType String [TypeSymbol]
+    deriving (Show, Eq)
+
+
+data TypeSymbol
+    = AllVariants
+    | TypeSymbol String
+    deriving (Show, Eq)

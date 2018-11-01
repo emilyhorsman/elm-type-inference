@@ -644,3 +644,47 @@ main = hspec $ do
                         (Map.fromList [("x", Type "Float" []), ("y", Type "Float" [])]
                         )
                     )
+
+    describe "moduleStatement" $ do
+        it "parses a simple module statement" $
+            parse moduleStatement "" "module Main exposing (..)" `shouldParse`
+                ModuleStatement "Main" [AllSymbols]
+
+        it "parses a module statement exposing particular symbols" $
+            parse moduleStatement "" "module Main exposing (main, foo)" `shouldParse`
+                ModuleStatement "Main"
+                    [ ModuleFunction "main"
+                    , ModuleFunction "foo"
+                    ]
+
+        it "parses a module statement exposing types" $
+            parse moduleStatement "" "module Main exposing (Maybe(Just, Nothing), Either(..), main)" `shouldParse`
+                ModuleStatement "Main"
+                    [ ModuleType "Maybe" [TypeSymbol "Just", TypeSymbol "Nothing"]
+                    , ModuleType "Either" [AllVariants]
+                    , ModuleFunction "main"
+                    ]
+
+    describe "importStatement" $ do
+        it "parses a simple import statement" $
+            parse importStatement "" "import Html as H" `shouldParse`
+                ImportStatement "Html" []
+
+        it "parses an open import statement with all symbols" $
+            parse importStatement "" "import Html exposing (..)" `shouldParse`
+                ImportStatement "Html" [AllSymbols]
+
+        it "parses an open import statement with particular symbols" $
+            parse importStatement "" "import Maybe exposing (Maybe (..), isJust)" `shouldParse`
+                ImportStatement "Maybe"
+                    [ ModuleType "Maybe" [AllVariants]
+                    , ModuleFunction "isJust"
+                    ]
+
+        it "parses a qualified import" $
+            parse importStatement "" "import Html as H" `shouldParse`
+                QualifiedImportStatement "Html" "H" []
+
+        it "parses a qualified open import" $
+            parse importStatement "" "import Html as H exposing (..)" `shouldParse`
+                QualifiedImportStatement "Html" "H" [AllSymbols]
