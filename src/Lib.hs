@@ -184,7 +184,7 @@ function = do
     -- The cons operator must be surrounded in parenthesis when used outside a
     -- case branch.
     parameters <- many (try patternCons <|> patternTerm)
-    symbol "="
+    symbolNewline "="
     case maybeAnnotation of
         Just (annotationBindingName, tree) ->
             if annotationBindingName == bindingName then

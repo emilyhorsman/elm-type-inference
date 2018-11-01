@@ -788,5 +788,7 @@ main = hspec $ do
                                 (FunctionApplication (Variable "text") (String "Hello"))
                             )
                         ]
-            in
-                parse topLevelProgram "" topLevelProgramSimple `shouldParse` result
+             in do
+                parse topLevelProgram "" topLevelProgramSimpleA `shouldParse` result
+                parse topLevelProgram "" topLevelProgramSimpleB `shouldParse` result
+                parse topLevelProgram "" topLevelProgramSimpleC `shouldParse` result

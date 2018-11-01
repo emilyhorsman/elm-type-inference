@@ -87,9 +87,22 @@ funcTypeAnnotationNested = [r|x : (Int -> Int) -> Int
 x _ = 1|]
 
 
-topLevelProgramSimple = [r|
+topLevelProgramSimpleA = [r|
 import Html exposing (..)
 
 
 main = text "Hello"
+|]
+
+
+topLevelProgramSimpleB = [r|import Html exposing (..)
+
+main = text "Hello"
+|]
+
+
+topLevelProgramSimpleC = [r|import Html exposing (..)
+
+main =
+    text "Hello"
 |]
