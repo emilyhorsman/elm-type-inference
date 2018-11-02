@@ -765,6 +765,10 @@ main = hspec $ do
             parse importStatement "" "import Html" `shouldParse`
                 ImportStatement "Html" []
 
+        it "parses a deep import" $
+            parse importStatement "" "import Html.Events" `shouldParse`
+                ImportStatement "Html.Events" []
+
         it "parses an open import statement with all symbols" $
             parse importStatement "" "import Html exposing (..)" `shouldParse`
                 ImportStatement "Html" [AllSymbols]

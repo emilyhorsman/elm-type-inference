@@ -2,6 +2,7 @@ module Lib where
 
 import Control.Monad (liftM2)
 import Control.Monad.Combinators.Expr
+import Data.List (intercalate)
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Text.Megaparsec
@@ -529,7 +530,7 @@ typeSymbols =
 importStatement :: Parser ImportStatement
 importStatement = do
     symbol "import"
-    name <- moduleName
+    name <- intercalate "." <$> moduleName `sepBy1` char '.'
     choice
         [ try $ QualifiedImportStatement name
             <$> (symbol "as" *> moduleName) <*> unqualifiedImport
