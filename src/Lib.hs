@@ -20,10 +20,10 @@ import Whitespace
 
 topLevelProgram :: Parser Program
 topLevelProgram = do
-    space
+    spaceConsumer space1
     maybeModuleStatement <- optional $ try $ moduleStatement <* newline
-    space
-    declarations <- statements `sepEndBy` many (newline <* space)
+    spaceConsumer space1
+    declarations <- statements `sepEndBy` some (newline <* space)
     eof
     return $ Program maybeModuleStatement declarations
   where
@@ -538,8 +538,8 @@ importStatement = do
   where
     unqualifiedImport =
         choice
-            [ [] <$ eof
-            , [] <$ newline
+            [ [] <$ lookAhead eof
+            , [] <$ lookAhead newline
             , symbol "exposing" *> syms
             ]
 

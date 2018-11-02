@@ -820,7 +820,25 @@ main = hspec $ do
                             )
                         ]
              in
-                parse topLevelProgram "" topLevelProgramMultipleImports `shouldParse` result
+                parse topLevelProgram "A" topLevelProgramMultipleImportsA `shouldParse` result
+
+        it "parses multiple imports with closed, unqualified import first" $
+            let
+                result =
+                    Program
+                        Nothing
+                        [ Left (ImportStatement "Browser" [])
+                        , Left (ImportStatement "Html" [AllSymbols])
+                        , Right
+                            (BoundFunctionDefinition
+                                Nothing
+                                "main"
+                                []
+                                (FunctionApplication (Variable "text") (String "Hello"))
+                            )
+                        ]
+             in
+                parse topLevelProgram "B" topLevelProgramMultipleImportsB `shouldParse` result
 
         it "parses a simple program with module" $
             let
@@ -841,3 +859,19 @@ main = hspec $ do
 
             in
                 testParserWithFile topLevelProgram "Simple.elm" result
+
+        it "parses comments preceding program" $
+            let
+                result =
+                    Program
+                        Nothing
+                        [ Right
+                            (BoundFunctionDefinition
+                                Nothing
+                                "main"
+                                []
+                                (FunctionApplication (Variable "text") (String "Hello"))
+                            )
+                        ]
+            in
+                parse topLevelProgram "" topLevelProgramPrecedingComments `shouldParse` result

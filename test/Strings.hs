@@ -91,6 +91,12 @@ funcTypeAnnotationArgs = [r|x : Maybe a
 x = Nothing|]
 
 
+topLevelProgramPrecedingComments = [r|-- Hello
+
+main = text "Hello"
+|]
+
+
 topLevelProgramSimpleA = [r|
 import Html exposing (..)
 
@@ -112,8 +118,16 @@ main =
 |]
 
 
-topLevelProgramMultipleImports = [r|import Html exposing (..)
+topLevelProgramMultipleImportsA = [r|import Html exposing (..)
 import Browser
+
+main =
+    text "Hello"
+|]
+
+
+topLevelProgramMultipleImportsB = [r|import Browser
+import Html exposing (..)
 
 main =
     text "Hello"
