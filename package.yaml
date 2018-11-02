@@ -23,6 +23,7 @@ dependencies:
 - containers >= 0.6.0.1 && < 0.7
 - megaparsec >= 7.0.1 && < 7.1
 - parser-combinators >= 1.0.0 && < 1.1
+- pretty-simple >= 2.2 && < 3
 
 library:
   source-dirs: src
