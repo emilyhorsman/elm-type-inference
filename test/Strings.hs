@@ -110,3 +110,11 @@ topLevelProgramSimpleC = [r|import Html exposing (..)
 main =
     text "Hello"
 |]
+
+
+topLevelProgramMultipleImports = [r|import Html exposing (..)
+import Browser
+
+main =
+    text "Hello"
+|]

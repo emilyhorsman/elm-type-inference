@@ -804,6 +804,24 @@ main = hspec $ do
                 parse topLevelProgram "" topLevelProgramSimpleB `shouldParse` result
                 parse topLevelProgram "" topLevelProgramSimpleC `shouldParse` result
 
+        it "parses multiple imports" $
+            let
+                result =
+                    Program
+                        Nothing
+                        [ Left (ImportStatement "Html" [AllSymbols])
+                        , Left (ImportStatement "Browser" [])
+                        , Right
+                            (BoundFunctionDefinition
+                                Nothing
+                                "main"
+                                []
+                                (FunctionApplication (Variable "text") (String "Hello"))
+                            )
+                        ]
+             in
+                parse topLevelProgram "" topLevelProgramMultipleImports `shouldParse` result
+
         it "parses a simple program with module" $
             let
                 result =

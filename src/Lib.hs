@@ -537,7 +537,11 @@ importStatement = do
         ]
   where
     unqualifiedImport =
-        [] <$ eof <|> symbol "exposing" *> syms
+        choice
+            [ [] <$ eof
+            , [] <$ newline
+            , symbol "exposing" *> syms
+            ]
 
     syms =
         choice
