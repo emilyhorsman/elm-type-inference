@@ -861,8 +861,8 @@ main = hspec $ do
                 result =
                     Program
                         Nothing
-                        [ Left (ImportStatement "Html" [AllSymbols])
-                        , Right
+                        [ ImportDecl (ImportStatement "Html" [AllSymbols])
+                        , FunctionDecl
                             (BoundFunctionDefinition
                                 Nothing
                                 "main"
@@ -880,9 +880,9 @@ main = hspec $ do
                 result =
                     Program
                         Nothing
-                        [ Left (ImportStatement "Html" [AllSymbols])
-                        , Left (ImportStatement "Browser" [])
-                        , Right
+                        [ ImportDecl (ImportStatement "Html" [AllSymbols])
+                        , ImportDecl (ImportStatement "Browser" [])
+                        , FunctionDecl
                             (BoundFunctionDefinition
                                 Nothing
                                 "main"
@@ -898,9 +898,9 @@ main = hspec $ do
                 result =
                     Program
                         Nothing
-                        [ Left (ImportStatement "Browser" [])
-                        , Left (ImportStatement "Html" [AllSymbols])
-                        , Right
+                        [ ImportDecl (ImportStatement "Browser" [])
+                        , ImportDecl (ImportStatement "Html" [AllSymbols])
+                        , FunctionDecl
                             (BoundFunctionDefinition
                                 Nothing
                                 "main"
@@ -916,8 +916,8 @@ main = hspec $ do
                 result =
                     Program
                         (Just (ModuleStatement "Simple" [AllSymbols]))
-                        [ Left (ImportStatement "Html" [AllSymbols])
-                        , Right
+                        [ ImportDecl (ImportStatement "Html" [AllSymbols])
+                        , FunctionDecl
                             (BoundFunctionDefinition
                                 (Just
                                     (Annotation (Type "Html" [TypeArg "a"]))
@@ -936,7 +936,7 @@ main = hspec $ do
                 result =
                     Program
                         Nothing
-                        [ Right
+                        [ FunctionDecl
                             (BoundFunctionDefinition
                                 Nothing
                                 "main"

@@ -54,8 +54,8 @@ topLevelProgram = do
   where
     statements =
         choice
-            [ Left <$> nonIndented importStatement
-            , Right <$> nonIndented function <?> "function definition"
+            [ ImportDecl <$> nonIndented importStatement
+            , FunctionDecl <$> nonIndented function <?> "function definition"
             ]
 
 

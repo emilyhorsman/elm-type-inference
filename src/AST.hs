@@ -4,7 +4,15 @@ import qualified Data.Map.Strict as Map
 
 
 data Program
-    = Program (Maybe ModuleStatement) [Either ImportStatement Declaration]
+    = Program (Maybe ModuleStatement) [ProgramBody]
+    deriving (Show, Eq)
+
+
+data ProgramBody
+    = ImportDecl ImportStatement
+    | FunctionDecl Declaration
+    | TypeAliasDecl TypeAlias
+    | TypeDecl TypeConstructorDefinition
     deriving (Show, Eq)
 
 
