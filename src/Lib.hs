@@ -19,9 +19,27 @@ import Utility
 import Whitespace
 
 
-functionApplicationJuxtaposition :: OpP
-functionApplicationJuxtaposition =
-    FunctionApplication <$ try (symbolNewline "" <* lookAhead expression)
+functionApplicationJuxtaposition :: Pos -> OpP
+functionApplicationJuxtaposition reference =
+    FunctionApplication <$ try (symbolNewline "" <* lookAhead p)
+  where
+    -- Function application by juxtaposition means we need to disambiguate a
+    -- situation like the following:
+    --
+    --     let
+    --         x = func
+    --           arg1
+    --           arg2
+    --         y = 1
+    --     in …
+    --
+    -- Which should be (func arg1 arg2) but would be parsed as
+    -- (func arg1 arg2 y) without checking indentation.
+    p = do
+        i <- L.indentLevel
+        if i > reference
+           then expression
+           else L.incorrectIndent GT reference i
 
 
 topLevelProgram :: Parser Program
@@ -79,10 +97,10 @@ term =
 
 
 -- Based on Basics.elm
-table =
+table reference =
     [ [ Prefix unaryNegative
       ]
-    , [ InfixL functionApplicationJuxtaposition
+    , [ InfixL $ functionApplicationJuxtaposition reference
       ]
     , [ InfixL composeLeftOperator
       , InfixR composeRightOperator
@@ -118,7 +136,12 @@ table =
 
 expression :: Parser Expression
 expression =
-    makeExprParser term table
+    contextualExpression pos1
+
+
+contextualExpression :: Pos -> Parser Expression
+contextualExpression reference =
+    makeExprParser term $ table reference
 
 
 variable :: Parser Expression
@@ -185,22 +208,23 @@ tupleExpression =
 function :: Parser Declaration
 function = do
     maybeAnnotation <- optional $ try declarationAnnotation
+    indentation <- L.indentLevel
     bindingName <- identifier
     -- `func x :: xs = …` is not valid Elm like `case x of x :: xs -> …` is.
     -- The cons operator must be surrounded in parenthesis when used outside a
     -- case branch.
     parameters <- many (try patternCons <|> patternTerm)
     symbolNewline "="
+    let funcDef a = BoundFunctionDefinition a bindingName parameters
     case maybeAnnotation of
         Just (annotationBindingName, tree) ->
             if annotationBindingName == bindingName then
-                BoundFunctionDefinition (Just tree) bindingName parameters <$> expression
+                funcDef (Just tree) <$> contextualExpression indentation
             else
                 fail $ "`" ++ annotationBindingName ++ "` annotation must be followed by definition."
 
         Nothing ->
-            BoundFunctionDefinition Nothing bindingName parameters <$> expression
-
+            funcDef Nothing <$> contextualExpression indentation
   where
     patternCons = do
         lhs <- pattern

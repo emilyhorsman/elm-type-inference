@@ -171,3 +171,9 @@ topLevelFunctionWhitespaceFailure = [r|import Browser
 main =
     text "Hello"
 |]
+
+
+topLevelFunctionColumnFailure = [r|
+main = text
+"hello"
+|]

@@ -901,3 +901,6 @@ main = hspec $ do
 
         it "fails on whitespace before top-level function declarations" $
             parse topLevelProgram "" `shouldFailOn` topLevelFunctionWhitespaceFailure
+
+        it "fails on expression in the same column as declaration" $
+            parse topLevelProgram "" `shouldFailOn` topLevelFunctionColumnFailure
