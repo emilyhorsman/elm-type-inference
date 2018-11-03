@@ -312,6 +312,36 @@ main = hspec $ do
                     ]
                     (FunctionApplication (Variable "x") (Bool True))
 
+        it "correctly handles multiline function application" $
+            parse letBinding "" letBindingMultilineFunApp `shouldParse`
+                LetBinding
+                    [ BoundFunctionDefinition
+                        Nothing
+                        "x"
+                        []
+                        (Int 1)
+                    ]
+                    (LetBinding
+                        [ BoundFunctionDefinition
+                            Nothing
+                            "y"
+                            []
+                            (FunctionApplication
+                                (FunctionApplication
+                                    (Variable "f")
+                                    (Int 1)
+                                )
+                                (Int 2)
+                            )
+                        , BoundFunctionDefinition
+                            Nothing
+                            "z"
+                            []
+                            (Int 3)
+                        ]
+                        (Variable "z")
+                    )
+
     describe "caseExpression" $ do
         it "parses a single case" $
             parse caseExpression "" "case True of _ -> 1" `shouldParse`

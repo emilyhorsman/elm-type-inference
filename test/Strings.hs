@@ -46,6 +46,18 @@ letBindingTypeAnnotation = [r|let
     x y = 1 in x True|]
 
 
+letBindingMultilineFunApp = [r|let
+    x = 1
+in
+    let
+        y = f
+            1
+            2
+        z = 3
+    in
+        z|]
+
+
 multiLineIfExpression = [r|if True
   then
     0
