@@ -27,7 +27,8 @@ functionApplicationJuxtaposition =
 topLevelProgram :: Parser Program
 topLevelProgram = do
     spaceConsumer space1
-    maybeModuleStatement <- optional $ try $ moduleStatement <* newline
+    maybeModuleStatement <- optional $ try $
+        nonIndented moduleStatement <* newline
     spaceConsumer space1
     declarations <- statements `sepEndBy` some (newline <* space)
     eof
@@ -35,8 +36,8 @@ topLevelProgram = do
   where
     statements =
         choice
-            [ Left <$> importStatement
-            , Right <$> function <?> "function definition"
+            [ Left <$> nonIndented importStatement
+            , Right <$> nonIndented function <?> "function definition"
             ]
 
 

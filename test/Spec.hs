@@ -892,3 +892,12 @@ main = hspec $ do
                         ]
             in
                 parse topLevelProgram "" topLevelProgramPrecedingComments `shouldParse` result
+
+        it "fails on whitespace before top-level import" $
+            parse topLevelProgram "" `shouldFailOn` topLevelImportWhitespaceFailure
+
+        it "fails on whitespace before top-level module" $
+            parse topLevelProgram "" `shouldFailOn` topLevelModuleWhitespaceFailure
+
+        it "fails on whitespace before top-level function declarations" $
+            parse topLevelProgram "" `shouldFailOn` topLevelFunctionWhitespaceFailure

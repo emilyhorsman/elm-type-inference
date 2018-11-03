@@ -42,3 +42,6 @@ symbol = L.symbol $ spaceConsumer spacePreserveNewlines
 
 
 symbolNewline = L.symbol $ spaceConsumer space1
+
+
+nonIndented = L.nonIndented $ spaceConsumer spacePreserveNewlines

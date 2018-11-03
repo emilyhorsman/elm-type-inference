@@ -143,3 +143,31 @@ import Html exposing (..)
 main =
     text "Hello"
 |]
+
+
+topLevelImportWhitespaceFailure = [r|import Browser
+  import Html exposing (..)
+
+main =
+    text "Hello"
+|]
+
+
+topLevelModuleWhitespaceFailure = [r|-- Hello
+ module Main exposing (..)
+
+import Html exposing (..)
+
+main =
+    text "Hello"
+|]
+
+
+topLevelFunctionWhitespaceFailure = [r|import Browser
+
+ x =
+     5
+
+main =
+    text "Hello"
+|]
