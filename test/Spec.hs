@@ -408,6 +408,19 @@ main = hspec $ do
                     (AnonymousFunction ["x"] (Variable "x"))
                     (Int 1)
 
+        it "parses multiline function application" $
+            let
+                result =
+                    FunctionApplication
+                        (FunctionApplication
+                            (Variable "div")
+                            (List [])
+                        )
+                        (List [])
+            in do
+                parse expression "A" multiLineFunctionApplicationA `shouldParse` result
+                parse expression "B" multiLineFunctionApplicationB `shouldParse` result
+
         it "parses case and let in if" $
             parse expression "" "if case x of _ -> True then let a = 5 in a else 5" `shouldParse`
                 If

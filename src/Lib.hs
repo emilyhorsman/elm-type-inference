@@ -19,6 +19,11 @@ import Utility
 import Whitespace
 
 
+functionApplicationJuxtaposition :: OpP
+functionApplicationJuxtaposition =
+    FunctionApplication <$ try (symbolNewline "" <* lookAhead expression)
+
+
 topLevelProgram :: Parser Program
 topLevelProgram = do
     spaceConsumer space1

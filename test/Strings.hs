@@ -4,6 +4,17 @@ module Strings where
 import Text.RawString.QQ
 
 
+multiLineFunctionApplicationA = [r|div
+    []
+    []|]
+
+
+multiLineFunctionApplicationB = [r|div []
+
+
+    []|]
+
+
 letBindingTwoBindingsA = [r|let
   x = True
   y = True

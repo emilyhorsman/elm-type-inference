@@ -52,11 +52,6 @@ unaryNegative =
     Negate <$ op "-" space1
 
 
-functionApplicationJuxtaposition :: OpP
-functionApplicationJuxtaposition =
-    FunctionApplication <$ symbol ""
-
-
 addOperator :: OpP
 addOperator =
     BinOp Add <$ op "+" (char '+')

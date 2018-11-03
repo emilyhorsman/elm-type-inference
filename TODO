@@ -32,3 +32,5 @@
 - [*] Imports
 - [*] Type annotations
 - [ ] Program of top-level functions
+- [ ] Function application can span multiple lines
+- [ ] Lists, tuples, records can span multiple lines
