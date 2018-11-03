@@ -181,8 +181,8 @@ ifExpression = do
 list :: ([a] -> b) -> Parser a -> Parser b
 list dataConstructor parser =
     fmap dataConstructor $
-        -- Consume newlines after opening brace, comma separators, and members.
-        -- Do not consume newlines after the closing brace.
+        -- Consume newlines after opening bracket, comma separators, and members.
+        -- Do not consume newlines after the closing bracket.
         between (symbolNewline "[") (symbol "]") $
             (parser <* spaceConsumer space1) `sepBy` symbolNewline ","
 
@@ -195,6 +195,8 @@ listExpression =
 -- Generic tuple construction for tupleExpression and patternTuple
 tuple :: ([a] -> b) -> Parser a -> Parser b
 tuple dataConstructor parser = do
+    -- Consume newlines after opening paren, comma separators, and members.
+    -- Do not consume newlines after the closing paren.
     symbolNewline "("
     a <- parser <* spaceConsumer space1
     rest <- count' 1 2 $ symbolNewline "," *> parser <* spaceConsumer space1
@@ -336,24 +338,29 @@ caseBranches requiredIndentation = do
 recordValue :: Parser Expression
 recordValue =
     fmap (RecordValue . Map.fromList) $
-        between (symbol "{") (symbol "}") $ recordMemberBinding `sepBy` symbol ","
+        -- Consume newlines after opening brace, comma separators, and members.
+        -- Do not consume newlines after the closing brace.
+        between (symbolNewline "{") (symbol "}") $
+            recordMemberBinding `sepBy` symbolNewline ","
 
 
 recordUpdate :: Parser Expression
 recordUpdate = do
-    symbol "{"
-    name <- identifier
-    symbol "|"
-    bindings <- recordMemberBinding `sepBy1` symbol ","
+    -- Consume newlines after opening brace, comma separators, pipe delimiter,
+    -- and members.  Do not consume newlines after the closing brace.
+    symbolNewline "{"
+    name <- identifier <* spaceConsumer space1
+    symbol "|" <* spaceConsumer space1
+    bindings <- recordMemberBinding `sepBy1` symbolNewline ","
     symbol "}"
     return $ RecordUpdate name $ Map.fromList bindings
 
 
 recordMemberBinding :: Parser (String, Expression)
 recordMemberBinding = do
-    key <- identifier
-    symbol "="
-    value <- expression
+    key <- identifier <* spaceConsumer space1
+    symbolNewline "="
+    value <- expression <* spaceConsumer space1
     return (key, value)
 
 

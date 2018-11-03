@@ -217,3 +217,14 @@ tupleExpressionMultilineB = [r|( 1,
 2,
 3
 )|]
+
+
+recordValueMultiline = [r|{ x = 1
+, y = 2
+}|]
+
+
+recordUpdateMultiline = [r|{ rec |
+    x =
+        1
+}|]
