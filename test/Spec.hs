@@ -138,6 +138,14 @@ main = hspec $ do
         it "fails on k > 3 tuple" $
             parse tupleExpression "" `shouldFailOn` "(1,2,3,4)"
 
+        it "parses a multiline tuple" $
+            let
+                result =
+                    Tuple [Int 1, Int 2, Int 3]
+            in do
+                parse tupleExpression "A" tupleExpressionMultilineA `shouldParse` result
+                parse tupleExpression "B" tupleExpressionMultilineB `shouldParse` result
+
     describe "ifExpression" $ do
         it "parses an if statement" $
             parse ifExpression "" "if True then 0 else 1" `shouldParse` If (Bool True) (Int 0) (Int 1)

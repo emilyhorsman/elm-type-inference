@@ -195,9 +195,9 @@ listExpression =
 -- Generic tuple construction for tupleExpression and patternTuple
 tuple :: ([a] -> b) -> Parser a -> Parser b
 tuple dataConstructor parser = do
-    symbol "("
-    a <- parser
-    rest <- count' 1 2 $ symbol "," *> parser
+    symbolNewline "("
+    a <- parser <* spaceConsumer space1
+    rest <- count' 1 2 $ symbolNewline "," *> parser <* spaceConsumer space1
     symbol ")"
     return $ dataConstructor (a : rest)
 

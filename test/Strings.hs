@@ -203,3 +203,17 @@ listExpressionMultilineB = [r|[ 1,
 2,
 3
 ]|]
+
+
+tupleExpressionMultilineA = [r|(
+  1
+, 2
+
+, 3
+)|]
+
+
+tupleExpressionMultilineB = [r|( 1,
+2,
+3
+)|]
