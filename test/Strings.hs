@@ -189,3 +189,17 @@ topLevelFunctionColumnFailure = [r|
 main = text
 "hello"
 |]
+
+
+listExpressionMultilineA = [r|[
+  1
+, 2
+
+, 3
+]|]
+
+
+listExpressionMultilineB = [r|[ 1,
+2,
+3
+]|]

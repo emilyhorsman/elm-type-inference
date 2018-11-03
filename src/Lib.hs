@@ -181,8 +181,10 @@ ifExpression = do
 list :: ([a] -> b) -> Parser a -> Parser b
 list dataConstructor parser =
     fmap dataConstructor $
-        between (symbol "[") (symbol "]") $
-            parser `sepBy` symbol ","
+        -- Consume newlines after opening brace, comma separators, and members.
+        -- Do not consume newlines after the closing brace.
+        between (symbolNewline "[") (symbol "]") $
+            (parser <* spaceConsumer space1) `sepBy` symbolNewline ","
 
 
 listExpression :: Parser Expression

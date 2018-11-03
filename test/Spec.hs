@@ -112,6 +112,14 @@ main = hspec $ do
         it "fails when member fails" $
             parse listExpression "" `shouldFailOn` "[4.]"
 
+        it "parses a multiline list" $
+            let
+                result =
+                    List [Int 1, Int 2, Int 3]
+            in do
+                parse listExpression "A" listExpressionMultilineA `shouldParse` result
+                parse listExpression "B" listExpressionMultilineB `shouldParse` result
+
     describe "tupleExpression" $ do
         it "parses a pair of bools" $
             parse tupleExpression "" "( True, False )" `shouldParse`
