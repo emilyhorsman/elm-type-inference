@@ -931,6 +931,36 @@ main = hspec $ do
             in
                 testParserWithFile topLevelProgram "Simple.elm" result
 
+        it "parses a simple program with custom types and aliases" $
+            testParserWithFile topLevelProgram "TopLevels.elm" $
+                Program
+                    (Just (ModuleStatement "TopLevels" [AllSymbols]))
+                    [ ImportDecl (ImportStatement "Html" [])
+                    , TypeDecl
+                        ( TypeConstructorDefinition "Msg" []
+                            [ Variant "Inc" []
+                            , Variant "Dec" []
+                            ]
+                        )
+                    , TypeAliasDecl
+                        ( TypeAlias "Point"
+                            ( TupleType
+                                [ Type "Int" []
+                                , Type "Int" []
+                                ]
+                            )
+                        )
+                    , FunctionDecl
+                        ( BoundFunctionDefinition
+                            ( Just
+                                ( Annotation
+                                    ( Type "Html" [ TypeArg "a" ] )
+                                )
+                            ) "main" []
+                            ( FunctionApplication ( Variable "text" ) ( String "Hello" ) )
+                        )
+                    ]
+
         it "parses comments preceding program" $
             let
                 result =

@@ -33,5 +33,5 @@
 - [*] Type annotations
 - [*] Function application can span multiple lines
 - [*] Lists, tuples, records can span multiple lines
-- [ ] Top-level type declarations
+- [*] Top-level type declarations
 - [ ] Program of top-level functions

@@ -56,6 +56,9 @@ topLevelProgram = do
         choice
             [ ImportDecl <$> nonIndented importStatement
             , FunctionDecl <$> nonIndented function <?> "function definition"
+            , TypeAliasDecl <$> nonIndented typeAlias <?> "type alias"
+            , TypeDecl <$> nonIndented typeConstructorDefinition <?>
+                "type constructor definition"
             ]
 
 
