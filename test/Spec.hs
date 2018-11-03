@@ -988,3 +988,34 @@ main = hspec $ do
 
         it "fails on expression in the same column as declaration" $
             parse topLevelProgram "" `shouldFailOn` topLevelFunctionColumnFailure
+
+        it "parses case expressions" $
+            testParserWithFile topLevelProgram "Cases.elm" $
+                Program
+                    (Just (ModuleStatement "Cases" [AllSymbols]))
+                    [ TypeDecl
+                        ( TypeConstructorDefinition "Msg" []
+                            [ Variant "Inc" []
+                            , Variant "Dec" []
+                            ]
+                        )
+                    , FunctionDecl
+                        ( BoundFunctionDefinition
+                            Nothing
+                            "update"
+                            [PatternVariable "message", PatternVariable "model"]
+                            (Case
+                                (Variable "message")
+                                [ CaseBranch (PatternConstructor "Inc" []) (Int 1)
+                                , CaseBranch (PatternConstructor "Dec" []) (Int 0)
+                                ]
+                            )
+                        )
+                    , FunctionDecl
+                        (BoundFunctionDefinition
+                            Nothing
+                            "main"
+                            []
+                            (FunctionApplication (Variable "text") (String "Hello"))
+                        )
+                    ]
