@@ -18,10 +18,19 @@ import ParserDefinition
 import Utility
 import Whitespace
 
+import Debug.Trace
+println msg = trace (show msg) $ return ()
+
+seeNext :: String -> Int -> Parser ()
+seeNext label n = do
+  s <- getParserState
+  let out = take n (stateInput s)
+  println (label ++ "> " ++ out)
+
 
 functionApplicationJuxtaposition :: Pos -> OpP
 functionApplicationJuxtaposition reference =
-    FunctionApplication <$ try (symbolNewline "" <* lookAhead p)
+    FunctionApplication <$ try (symbolNewline "" <* notFollowedBy q)
   where
     -- Function application by juxtaposition means we need to disambiguate a
     -- situation like the following:
@@ -35,11 +44,11 @@ functionApplicationJuxtaposition reference =
     --
     -- Which should be (func arg1 arg2) but would be parsed as
     -- (func arg1 arg2 y) without checking indentation.
-    p = do
+    q = do
         i <- L.indentLevel
-        if i > reference
-           then expression
-           else L.incorrectIndent GT reference i
+        if i < reference || i == pos1
+           then return ()
+           else fail ""
 
 
 topLevelProgram :: Parser Program
