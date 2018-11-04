@@ -30,7 +30,8 @@ seeNext label n = do
 
 functionApplicationJuxtaposition :: Pos -> OpP
 functionApplicationJuxtaposition reference =
-    FunctionApplication <$ try (symbolNewline "" <* notFollowedBy q)
+    FunctionApplication <$ try
+        (symbolNewline "" <* notFollowedBy q <* lookAhead expression)
   where
     -- Function application by juxtaposition means we need to disambiguate a
     -- situation like the following:
