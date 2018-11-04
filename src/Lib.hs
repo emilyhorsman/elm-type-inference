@@ -332,20 +332,25 @@ caseExpression = do
 
 caseBranches :: Pos -> Parser [CaseBranch]
 caseBranches requiredIndentation = do
-    indentation <- L.indentLevel
     pat <- pattern
     symbolNewline "->"
-    body <- expression
-    hasNewlineSeparator <- didConsume newline
-    optional space1
-    case (hasNewlineSeparator, indentation == requiredIndentation) of
-        (_, False) ->
-            L.incorrectIndent EQ requiredIndentation indentation
-        (True, True) -> do
+    bodyIndentation <- L.indentLevel
+    body <- contextualExpression bodyIndentation
+    let branch = CaseBranch pat body
+    another <- shouldContinue requiredIndentation
+    if another
+        then do
             cases <- caseBranches requiredIndentation
-            return $ (CaseBranch pat body) : cases
-        (False, True) -> do
-            return [CaseBranch pat body]
+            return $ branch : cases
+        else return [branch]
+
+
+shouldContinue :: Pos -> Parser Bool
+shouldContinue requiredIndentation = do
+    eol
+    spaceConsumer space1
+    indentation <- L.indentLevel
+    return $ indentation == requiredIndentation
 
 
 recordValue :: Parser Expression
