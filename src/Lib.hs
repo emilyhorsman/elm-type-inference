@@ -48,7 +48,8 @@ topLevelProgram = do
     maybeModuleStatement <- optional $ try $
         nonIndented moduleStatement <* newline
     spaceConsumer space1
-    declarations <- statements `sepEndBy` some (newline <* space)
+    declarations <- some $ statements <* spaceConsumer space1
+    spaceConsumer space1
     eof
     return $ Program maybeModuleStatement declarations
   where
