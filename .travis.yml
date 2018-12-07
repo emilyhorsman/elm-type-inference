@@ -9,4 +9,4 @@ before_install:
     - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 install:
 script:
-    - stack --no-terminal --skip-ghc-check test
+    - stack --no-terminal --skip-ghc-check test --test-arguments='--skip=TODO'

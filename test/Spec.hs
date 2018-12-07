@@ -989,7 +989,7 @@ main = hspec $ do
         it "fails on expression in the same column as declaration" $
             parse topLevelProgram "" `shouldFailOn` topLevelFunctionColumnFailure
 
-        it "parses case expressions" $
+        it "TODO parses case expressions" $
             testParserWithFile topLevelProgram "Cases.elm" $
                 Program
                     (Just (ModuleStatement "Cases" [AllSymbols]))
