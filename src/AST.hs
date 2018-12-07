@@ -134,6 +134,18 @@ data Type
     | TypeArg String
     | TupleType [Type]
     | RecordType (Map.Map String Type)
+    | ConstrainedTypeVariable ConstrainedTypeVariable
+    | Error
+    deriving (Show, Eq)
+
+
+-- TODO: This is probably not the best method for handling Elm's four
+-- constrained type variables.
+data ConstrainedTypeVariable
+    = Number
+    | Appendable
+    | Comparable
+    | Compappend
     deriving (Show, Eq)
 
 
