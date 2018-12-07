@@ -28,10 +28,15 @@ seeNext label n = do
   println (label ++ "> " ++ out)
 
 
+reserved :: Parser String
+reserved = do
+    choice $ map symbol $ Set.toList reservedWords
+
+
 functionApplicationJuxtaposition :: Pos -> OpP
 functionApplicationJuxtaposition reference =
     FunctionApplication <$ try
-        (symbolNewline "" <* notFollowedBy q <* lookAhead expression)
+        (symbolNewline "" <* notFollowedBy q <* notFollowedBy reserved <* lookAhead expression)
   where
     -- Function application by juxtaposition means we need to disambiguate a
     -- situation like the following:
@@ -149,13 +154,14 @@ table reference =
 
 
 expression :: Parser Expression
-expression =
+expression = do
+    seeNext "expression" 80
     contextualExpression pos1
 
 
 contextualExpression :: Pos -> Parser Expression
 contextualExpression reference =
-    makeExprParser term $ table reference
+    dbg "contextualExpression" $ makeExprParser term $ table reference
 
 
 variable :: Parser Expression
@@ -226,7 +232,8 @@ tupleExpression =
 function :: Parser Declaration
 function = do
     maybeAnnotation <- optional $ try declarationAnnotation
-    indentation <- L.indentLevel
+    level <- L.indentLevel
+    let indentation = mkPos $ (unPos level) + 1
     bindingName <- identifier
     -- `func x :: xs = …` is not valid Elm like `case x of x :: xs -> …` is.
     -- The cons operator must be surrounded in parenthesis when used outside a
@@ -287,38 +294,21 @@ letBinding = do
     symbolNewline "let"
     level <- L.indentLevel
     bindings <- someLetBindings level
+    seeNext "letBindings" 80
+    symbolNewline "in"
     LetBinding bindings <$> expression
 
 
 someLetBindings :: Pos -> Parser [Declaration]
 someLetBindings requiredIndentation = do
-    indentation <- L.indentLevel
-    -- We must have an initial binding.
     binding <- function
-    -- Bindings need to be separated with a newline but we need to give a
-    -- chance for the `in` ending to be on the same line. The example below
-    -- is valid Elm.
-    --
-    --     let
-    --       x = 0
-    --       y = 1 in x + y
-    hasNewlineSeparator <- didConsume newline
-    -- Adhere to the convention of consuming all trailing whitespace.
-    optional space1
-    done <- didConsume $ symbolNewline "in"
-    case (done, hasNewlineSeparator, indentation == requiredIndentation) of
-        (_, _, False) ->
-            -- TODO: The error message for this will be slightly incorrect if
-            -- this is the last binding before the `in` ending, since the error
-            -- will point to the end of the expression.
-            L.incorrectIndent EQ requiredIndentation indentation
-        (True, _, _) ->
-            return [binding]
-        (False, False, _) ->
-            fail "expected `in` or newline between let bindings"
-        _ -> do
+    another <- shouldContinue requiredIndentation
+    if another
+        then do
             bindings <- someLetBindings requiredIndentation
             return $ binding : bindings
+        else
+            return [binding]
 
 
 caseExpression :: Parser Expression

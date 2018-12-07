@@ -6,9 +6,9 @@ update message model =
     case message of
         Inc ->
             1
-
         Dec ->
-            True
+            0
 
 main =
-    text "Hello"
+    text
+        "Hello"
