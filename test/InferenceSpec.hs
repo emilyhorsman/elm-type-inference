@@ -97,3 +97,10 @@ spec = do
                     [ ("a", Type "List" [TypeArg "c"])
                     , ("b", Type "List" [TypeArg "c"])
                     ]
+
+        it "unifies complex type function 3" $
+            unify (Type "Either" [TypeArg "a", TypeArg "b"]) (Type "Either" [TypeArg "b", TypeArg "a"]) `shouldBe`
+                Map.fromList
+                    [ ("a", TypeArg "b")
+                    , ("b", TypeArg "b")
+                    ]
