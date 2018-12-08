@@ -34,32 +34,32 @@ import AST
 
 \subsection{Plumbing}
 
-A type substitution $\sigma$ is a mapping from type variables to types.
+A type substitution or `unifier' $\sigma$ is a mapping from type variables to types.
 
 \begin{code}
-type TypeSubstitution = Map.Map String Type
+type Unifier = Map.Map String Type
 \end{code}
 
-If we have a substitution $\sigma = [X \mapsto \texttt{Bool}]$ then we can apply it to the type $T = X \to X$ as follows.
+If we have a unifier $\sigma = [X \mapsto \texttt{Bool}]$ then we can apply it to the type $T = X \to X$ as follows.
 
 $$\sigma T = \sigma(X \to X) = \texttt{Bool} \to \texttt{Bool}$$
 
 \begin{code}
-applySubstitution :: TypeSubstitution -> Type -> Type
-applySubstitution substitution t@(TypeArg x) =
-    Map.findWithDefault t x substitution
+applyUnifier :: Unifier -> Type -> Type
+applyUnifier unifier t@(TypeArg x) =
+    Map.findWithDefault t x unifier
 
-applySubstitution substitution (Type constructorName types) =
-    Type constructorName $ applySubstitution substitution <$> types
+applyUnifier unifier (Type constructorName types) =
+    Type constructorName $ applyUnifier unifier <$> types
 
-applySubstitution substitution (TypeFunc a b) =
-    TypeFunc (applySubstitution substitution a) (applySubstitution substitution b)
+applyUnifier unifier (TypeFunc a b) =
+    TypeFunc (applyUnifier unifier a) (applyUnifier unifier b)
 
-applySubstitution _ _ =
+applyUnifier _ _ =
     Error
 \end{code}
 
-The unification algorithm requires a composition operator for substitutions.
+The unification algorithm requires a composition operator for unifiers.
 Pierce defines it with the following set comprehension.
 
 $$
@@ -69,14 +69,14 @@ $$
 \end{cases}
 $$
 
-That is, apply the substitution $\sigma$ to the mappings in $\gamma$ and then union the mappings in $\sigma$ which do not have a type variable in the domain of $\gamma$.
+That is, apply the unifier $\sigma$ to the mappings in $\gamma$ and then union the mappings in $\sigma$ which do not have a type variable in the domain of $\gamma$.
 
 \begin{code}
-composeSubstitution :: TypeSubstitution -> TypeSubstitution -> TypeSubstitution
-composeSubstitution sigma gamma =
+composeUnifier :: Unifier -> Unifier -> Unifier
+composeUnifier sigma gamma =
     let
         mappedGamma =
-            Map.map (applySubstitution sigma) gamma
+            Map.map (applyUnifier sigma) gamma
     in
         -- From the Map.union docs: `takes the left biased union of t1 and t2.
         -- It prefers t1 when duplicate keys are encountered.'
