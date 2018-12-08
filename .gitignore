@@ -1,3 +1,8 @@
 .stack-work/
 elm-type-inference.cabal
 *~
+*.aux
+*.log
+*.pdf
+_minted-*
+grammar

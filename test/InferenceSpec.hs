@@ -1,5 +1,6 @@
 module InferenceSpec (spec) where
 
+import qualified Data.Map.Strict as Map
 import Test.Hspec
 
 import AST
@@ -8,12 +9,14 @@ import Inference
 
 spec :: Spec
 spec = do
-    describe "expressionInference" $ do
-        it "infers chars" $
-            expressionInference [] [] (Char 'a') `shouldBe` Type "Char" []
+    describe "applySubstitution" $ do
+        it "substitutes a type argument" $
+            applySubstitution (Map.singleton "a" (Type "Char" [])) (TypeArg "a") `shouldBe`
+                Type "Char" []
 
-        it "infers numbers" $
-            expressionInference [] [] (Int 1) `shouldBe` ConstrainedTypeVariable Number
+        it "empty substitution acts as identity" $
+            applySubstitution Map.empty (TypeArg "a") `shouldBe` TypeArg "a"
 
-        it "infers floats" $
-            expressionInference [] [] (Float 1) `shouldBe` Type "Float" []
+        it "substitution does nothing without type arguments" $
+            applySubstitution (Map.singleton "a" (Type "Char" [])) (Type "Int" []) `shouldBe`
+                Type "Int" []
