@@ -8,7 +8,13 @@
 \usepackage[margin=0.75in]{geometry}
 
 \usepackage{minted}
-\newenvironment{code}{\VerbatimEnvironment\begin{minted}{haskell}}{\end{minted}}
+\newenvironment{code}{\VerbatimEnvironment\begin{minted}[
+    linenos,
+    firstnumber=last,
+    mathescape,
+    xleftmargin=0.5in,
+    xrightmargin=0.5in
+    ]{haskell}}{\end{minted}}
 \newenvironment{spec}{\VerbatimEnvironment\begin{minted}{haskell}}{\end{minted}}
 
 \begin{document}
