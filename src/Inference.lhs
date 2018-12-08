@@ -51,6 +51,9 @@ applySubstitution substitution t@(TypeArg x) =
 applySubstitution substitution (Type constructorName types) =
     Type constructorName $ applySubstitution substitution <$> types
 
+applySubstitution substitution (TypeFunc a b) =
+    TypeFunc (applySubstitution substitution a) (applySubstitution substitution b)
+
 applySubstitution _ _ =
     Error
 \end{code}

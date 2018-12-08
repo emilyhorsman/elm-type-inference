@@ -20,3 +20,13 @@ spec = do
         it "substitution does nothing without type arguments" $
             applySubstitution (Map.singleton "a" (Type "Char" [])) (Type "Int" []) `shouldBe`
                 Type "Int" []
+
+        it "substitutes a function type" $
+            let
+                sub = Map.fromList $
+                    [ ("a", Type "Char" [])
+                    , ("b", Type "Bool" [])
+                    ]
+            in
+                applySubstitution sub (TypeFunc (TypeArg "a") (TypeArg "b")) `shouldBe`
+                    TypeFunc (Type "Char" []) (Type "Bool" [])
