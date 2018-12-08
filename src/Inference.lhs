@@ -29,6 +29,10 @@ import AST
 \end{code}
 }
 
+\section{Type Inference}
+
+\subsection{Plumbing}
+
 A type substitution $\sigma$ is a mapping from type variables to types.
 
 \begin{code}
@@ -50,5 +54,9 @@ applySubstitution substitution (Type constructorName types) =
 applySubstitution _ _ =
     Error
 \end{code}
+
+\subsection{Constraint Generation}
+
+\subsection{Unification}
 
 \end{document}
