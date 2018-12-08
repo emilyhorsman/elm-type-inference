@@ -233,7 +233,7 @@ spec = do
             parse function "" funcTypeUnaryAnnotation `shouldParse`
                 BoundFunctionDefinition
                     (Just
-                        (Annotation (Type "Int" []))
+                        (Type "Int" [])
                     )
                     "x"
                     []
@@ -243,11 +243,11 @@ spec = do
             parse function "" funcTypeAnnotation `shouldParse`
                 BoundFunctionDefinition
                     (Just
-                        (BinAnnotation
-                            (Annotation (Type "Int" []))
-                            (BinAnnotation
-                                (Annotation (Type "Int" []))
-                                (Annotation (TupleType [Type "Int" [], Type "Int" []]))
+                        (TypeFunc
+                            (Type "Int" [])
+                            (TypeFunc
+                                (Type "Int" [])
+                                (TupleType [Type "Int" [], Type "Int" []])
                             )
                         )
                     )
@@ -261,12 +261,12 @@ spec = do
             parse function "" funcTypeAnnotationNested `shouldParse`
                 BoundFunctionDefinition
                     (Just
-                        (BinAnnotation
-                            (BinAnnotation
-                                (Annotation (Type "Int" []))
-                                (Annotation (Type "Int" []))
+                        (TypeFunc
+                            (TypeFunc
+                                (Type "Int" [])
+                                (Type "Int" [])
                             )
-                            (Annotation (Type "Int" []))
+                            (Type "Int" [])
                         )
                     )
                     "x"
@@ -277,7 +277,7 @@ spec = do
             parse function "" funcTypeAnnotationArgs `shouldParse`
                 BoundFunctionDefinition
                     (Just
-                        (Annotation (Type "Maybe" [TypeArg "a"]))
+                        (Type "Maybe" [TypeArg "a"])
                     )
                     "x"
                     []
@@ -319,9 +319,9 @@ spec = do
                 LetBinding
                     [ BoundFunctionDefinition
                         (Just
-                            (BinAnnotation
-                                (Annotation (Type "Bool" []))
-                                (Annotation (Type "Int" []))
+                            (TypeFunc
+                                (Type "Bool" [])
+                                (Type "Int" [])
                             )
                         )
                         "x"
@@ -922,7 +922,7 @@ spec = do
                         , FunctionDecl
                             (BoundFunctionDefinition
                                 (Just
-                                    (Annotation (Type "Html" [TypeArg "a"]))
+                                    (Type "Html" [TypeArg "a"])
                                 )
                                 "main"
                                 []
@@ -955,9 +955,7 @@ spec = do
                     , FunctionDecl
                         ( BoundFunctionDefinition
                             ( Just
-                                ( Annotation
-                                    ( Type "Html" [ TypeArg "a" ] )
-                                )
+                                ( Type "Html" [ TypeArg "a" ] )
                             ) "main" []
                             ( FunctionApplication ( Variable "text" ) ( String "Hello" ) )
                         )

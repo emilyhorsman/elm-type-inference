@@ -240,7 +240,7 @@ function = do
         PatternCons lhs <$> pattern
 
 
-declarationAnnotation :: Parser (String, Annotation)
+declarationAnnotation :: Parser (String, Type)
 declarationAnnotation = do
     bindingName <- identifier
     symbol ":"
@@ -249,18 +249,18 @@ declarationAnnotation = do
     return $ (bindingName, tree)
 
 
-annotation :: Parser Annotation
+annotation :: Parser Type
 annotation =
     makeExprParser annotationTerm
-        [ [ InfixR (BinAnnotation <$ symbol "->")
+        [ [ InfixR (TypeFunc <$ symbol "->")
           ]
         ]
 
-annotationTerm :: Parser Annotation
+annotationTerm :: Parser Type
 annotationTerm =
     choice
         [ try $ symbol "(" *> annotation <* symbol ")"
-        , Annotation <$> typeParser True
+        , typeParser True
         ]
 
 

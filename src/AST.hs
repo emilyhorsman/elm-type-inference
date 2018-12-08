@@ -47,13 +47,7 @@ data CaseBranch
 
 
 data Declaration
-    = BoundFunctionDefinition (Maybe Annotation) String [Pattern] Expression
-    deriving (Show, Eq)
-
-
-data Annotation
-    = BinAnnotation Annotation Annotation
-    | Annotation Type
+    = BoundFunctionDefinition (Maybe Type) String [Pattern] Expression
     deriving (Show, Eq)
 
 
@@ -132,6 +126,7 @@ data Variant
 data Type
     = Type String [Type]
     | TypeArg String
+    | TypeFunc Type Type
     | TupleType [Type]
     | RecordType (Map.Map String Type)
     | ConstrainedTypeVariable ConstrainedTypeVariable
