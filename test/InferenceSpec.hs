@@ -1,5 +1,6 @@
 module InferenceSpec (spec) where
 
+import Control.Exception (evaluate)
 import qualified Data.Map.Strict as Map
 import Test.Hspec
 
@@ -23,10 +24,76 @@ spec = do
 
         it "substitutes a function type" $
             let
-                u = Map.fromList $
+                u = Map.fromList
                     [ ("a", Type "Char" [])
                     , ("b", Type "Bool" [])
                     ]
             in
                 applyUnifier u (TypeFunc (TypeArg "a") (TypeArg "b")) `shouldBe`
                     TypeFunc (Type "Char" []) (Type "Bool" [])
+
+    describe "unify" $ do
+        it "two identical type arguments are already unified" $
+            unify (TypeArg "a") (TypeArg "a") `shouldBe` Map.empty
+
+        it "unifies two type arguments" $
+            unify (TypeArg "a") (TypeArg "b") `shouldBe` Map.singleton "a" (TypeArg "b")
+
+        it "unifies a left type argument" $
+            unify (TypeArg "a") (Type "Char" []) `shouldBe` Map.singleton "a" (Type "Char" [])
+
+        it "unifies a right type argument" $
+            unify (Type "Char" []) (TypeArg "a") `shouldBe` Map.singleton "a" (Type "Char" [])
+
+        it "unifies two function types" $
+            unify (TypeFunc (TypeArg "a") (TypeArg "b")) (TypeFunc (TypeArg "c") (TypeArg "d")) `shouldBe`
+                Map.fromList
+                    [ ("a", TypeArg "c")
+                    , ("b", TypeArg "d")
+                    ]
+
+        it "unifies two function types with a concrete type" $
+            unify (TypeFunc (TypeArg "a") (TypeArg "b")) (TypeFunc (TypeArg "c") (Type "Char" [])) `shouldBe`
+                Map.fromList
+                    [ ("a", TypeArg "c")
+                    , ("b", Type "Char" [])
+                    ]
+
+        it "throws an error unifying a function type and concrete type" $
+            evaluate (unify (TypeFunc (TypeArg "a") (TypeArg "b")) (Type "Char" [])) `shouldThrow` anyException
+
+        it "unifies a type argument and a function type" $
+            unify (TypeArg "a") (TypeFunc (TypeArg "b") (TypeArg "c")) `shouldBe`
+                Map.singleton "a" (TypeFunc (TypeArg "b") (TypeArg "c"))
+
+        it "throws an error unifying different constructors" $
+            evaluate (unify (Type "Char" []) (Type "Bool" [])) `shouldThrow` anyException
+
+        it "unifies two constructors" $
+            unify (Type "List" [TypeArg "a"]) (Type "List" [Type "Char" []]) `shouldBe`
+                Map.singleton "a" (Type "Char" [])
+
+        it "does need to unify two constructors with the same type args" $
+            unify (Type "List" [TypeArg "a"]) (Type "List" [TypeArg "a"]) `shouldBe`
+                Map.empty
+
+        it "unifies two constructors with multiple parameters" $
+            unify (Type "Either" [TypeArg "a", Type "Bool" []]) (Type "Either" [Type "Char" [], TypeArg "b"]) `shouldBe`
+                Map.fromList
+                    [ ("a", Type "Char" [])
+                    , ("b", Type "Bool" [])
+                    ]
+
+        it "unifies complex type function 1" $
+            unify (TypeFunc (TypeArg "a") (Type "Char" [])) (TypeFunc (Type "List" [TypeArg "b"]) (TypeArg "b")) `shouldBe`
+                Map.fromList
+                    [ ("a", Type "List" [Type "Char" []])
+                    , ("b", Type "Char" [])
+                    ]
+
+        it "unifies complex type function 2" $
+            unify (TypeFunc (TypeArg "a") (Type "List" [TypeArg "c"])) (TypeFunc (TypeArg "b") (TypeArg "a")) `shouldBe`
+                Map.fromList
+                    [ ("a", Type "List" [TypeArg "c"])
+                    , ("b", Type "List" [TypeArg "c"])
+                    ]
