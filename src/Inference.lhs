@@ -102,6 +102,12 @@ freeTypeVariables (Type _ types) =
 \end{code}
 
 \begin{code}
+assignType :: Type -> Type -> Unifier
+assignType t1@(TypeArg name) t2
+    | t1 == t2 = Map.empty
+    | Set.member name (freeTypeVariables t2) = error "oops"
+    | otherwise = Map.singleton name t2
+
 unify :: Type -> Type -> Unifier
 unify (TypeFunc left right) (TypeFunc left' right') =
     let
@@ -112,14 +118,10 @@ unify (TypeFunc left right) (TypeFunc left' right') =
     in
         composeUnifier rightUnifier leftUnifier
 
-unify a@(TypeArg var) b
-    | a == b = Map.empty
-    | Set.member var (freeTypeVariables b) = error "oops"
-    | otherwise = Map.singleton var b
-unify b a@(TypeArg var)
-    | a == b = Map.empty
-    | Set.member var (freeTypeVariables b) = error "oops"
-    | otherwise = Map.singleton var b
+unify a@(TypeArg _) b =
+    assignType a b
+unify b a@(TypeArg _) =
+    assignType a b
 
 unify (Type constructor _) (Type constructor' _)
     | constructor /= constructor' = error "Cannot unify different constructors."
