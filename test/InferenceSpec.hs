@@ -67,7 +67,8 @@ spec = do
                 Map.singleton "a" (TypeFunc (TypeArg "b") (TypeArg "c"))
 
         it "throws an error unifying different constructors" $
-            evaluate (unify (Type "Char" []) (Type "Bool" [])) `shouldThrow` anyException
+            evaluate (unify (Type "Char" []) (Type "Bool" [])) `shouldThrow`
+                errorCall differentConstructorsErrorMessage
 
         it "unifies two constructors" $
             unify (Type "List" [TypeArg "a"]) (Type "List" [Type "Char" []]) `shouldBe`
@@ -104,3 +105,10 @@ spec = do
                     [ ("a", TypeArg "b")
                     , ("b", TypeArg "b")
                     ]
+
+        it "throws an error on an infinite type" $ do
+            evaluate (unify (TypeArg "a") (Type "List" [TypeArg "a"])) `shouldThrow`
+                errorCall infiniteTypeErrorMessage
+
+            unify (TypeArg "b") (Type "List" [TypeArg "a"]) `shouldBe`
+                Map.singleton "b" (Type "List" [TypeArg "a"])

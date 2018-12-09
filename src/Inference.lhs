@@ -5,15 +5,14 @@
 
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage[margin=0.75in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[top=1in,bottom=1in,left=1.5in,right=1.5in]{geometry}
 
 \usepackage{minted}
 \newenvironment{code}{\VerbatimEnvironment\begin{minted}[
     linenos,
     firstnumber=last,
     mathescape,
-    xleftmargin=0.5in,
-    xrightmargin=0.5in,
     curlyquotes=true
     ]{haskell}}{\end{minted}}
 \newenvironment{spec}{\VerbatimEnvironment\begin{minted}{haskell}}{\end{minted}}
@@ -101,12 +100,26 @@ freeTypeVariables (Type _ types) =
     Set.unions $ freeTypeVariables <$> types
 \end{code}
 
+We want to ensure we do not produce an infinite type when assigning a type variable to a type.
+Thus, there is no defined unifier for $a$ and $\texttt{List}\, a$ as $[a \mapsto \texttt{List}\, a]$ would produce an infinite type.
+Unifying $b$ and $\texttt{List}\, a$ would be fine though, this is simply $[b \mapsto \texttt{List}\, a]$.
+
 \begin{code}
+infiniteTypeErrorMessage =
+    "Cannot unify an infinite type."
+
 assignType :: Type -> Type -> Unifier
 assignType t1@(TypeArg name) t2
     | t1 == t2 = Map.empty
-    | Set.member name (freeTypeVariables t2) = error "oops"
+    | Set.member name (freeTypeVariables t2) = error infiniteTypeErrorMessage
     | otherwise = Map.singleton name t2
+\end{code}
+
+Now we can produce a unifier for two given types.
+
+\begin{code}
+differentConstructorsErrorMessage =
+    "Cannot unify different constructors."
 
 unify :: Type -> Type -> Unifier
 unify (TypeFunc left right) (TypeFunc left' right') =
@@ -114,7 +127,9 @@ unify (TypeFunc left right) (TypeFunc left' right') =
         leftUnifier =
             unify left left'
         rightUnifier =
-            unify (applyUnifier leftUnifier right) (applyUnifier leftUnifier right')
+            unify
+                (applyUnifier leftUnifier right)
+                (applyUnifier leftUnifier right')
     in
         composeUnifier rightUnifier leftUnifier
 
@@ -124,11 +139,9 @@ unify b a@(TypeArg _) =
     assignType a b
 
 unify (Type constructor _) (Type constructor' _)
-    | constructor /= constructor' = error "Cannot unify different constructors."
+    | constructor /= constructor' = error differentConstructorsErrorMessage
 unify (Type constructor types) (Type constructor' types') =
     let
-        params = zip types types'
-
         pairUnifier :: (Type, Type) -> Unifier
         pairUnifier =
             uncurry unify
@@ -136,10 +149,25 @@ unify (Type constructor types) (Type constructor' types') =
         f :: Unifier -> (Type, Type) -> Unifier
         f unifier pair =
             composeUnifier unifier $ pairUnifier pair
+
+        params = zip types types'
     in
         foldl f Map.empty params
 
 unify _ _ = error "unification failure"
 \end{code}
+
+We can now achieve a result like the following.
+See the \texttt{InferenceSpec} test suite for more.
+
+$$\sigma(\alpha \to \texttt{Char}) = \sigma(\texttt{List}\, \beta \to \beta)$$
+$$\sigma = [\alpha \mapsto \texttt{List Char}, \beta \mapsto \texttt{Char}]$$
+
+\begin{minted}[escapeinside=||]{haskell}
+|$\lambda$|> let s = TypeArg "a" `TypeFunc` Type "Char" []
+|$\lambda$|> let t = Type "List" [TypeArg "b"] `TypeFunc` TypeArg "b"
+|$\lambda$|> s `unify` t
+fromList [("a",Type "List" [Type "Char" []]),("b",Type "Char" [])]
+\end{minted}
 
 \end{document}
