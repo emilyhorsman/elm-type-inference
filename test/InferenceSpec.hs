@@ -1,6 +1,7 @@
 module InferenceSpec (spec) where
 
 import Control.Exception (evaluate)
+import Control.Monad.State
 import qualified Data.Map.Strict as Map
 import Test.Hspec
 
@@ -112,3 +113,23 @@ spec = do
 
             unify (TypeArg "b") (Type "List" [TypeArg "a"]) `shouldBe`
                 Map.singleton "b" (Type "List" [TypeArg "a"])
+
+    describe "infer" $ do
+        it "infers the identity function" $
+            evalState (infer Map.empty (AnonymousFunction ["x"] (Variable "x"))) 0 `shouldBe`
+                ( Map.empty
+                , TypeFunc (TypeArg "t0") (TypeArg "t0")
+                )
+
+        it "infers with assumption requiring instantiation" $
+            let
+                assumptions =
+                    (Map.singleton "y" (TypeArg "t0"))
+
+                expression =
+                    (AnonymousFunction ["x"] (Variable "y"))
+            in
+                evalState (infer assumptions expression) 0 `shouldBe`
+                    ( Map.empty
+                    , TypeFunc (TypeArg "t0") (TypeArg "t1")
+                    )

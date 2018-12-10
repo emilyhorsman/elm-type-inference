@@ -23,6 +23,7 @@
 \begin{code}
 module Inference where
 
+import Control.Monad.State
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
@@ -169,5 +170,64 @@ $$\sigma = [\alpha \mapsto \texttt{List Char}, \beta \mapsto \texttt{Char}]$$
 |$\lambda$|> s `unify` t
 fromList [("a",Type "List" [Type "Char" []]),("b",Type "Char" [])]
 \end{minted}
+
+\subsection{Inference}
+
+Implicit type annotations (see 22.6 of Pierce) requires generating fresh type variables.
+
+\begin{code}
+getFreshVarName :: Int -> String
+getFreshVarName = (++) "t" . show
+
+type TypeVariablesState = State Int
+
+fresh :: TypeVariablesState String
+fresh = do
+    state <- get
+    put $ state + 1
+    return $ getFreshVarName state
+\end{code}
+
+Pierce describes a caveat we must solve in the inference algorithm.
+Examine the following code:
+
+\begin{minted}{haskell}
+let
+    id : a -> a
+    id x = x
+in
+    let
+        foo = id 1
+    in
+        id True
+\end{minted}
+
+\begin{code}
+infer :: Unifier -> Expression -> TypeVariablesState (Unifier, Type)
+infer _ (Char _) =
+    return (Map.empty, Type "Char" [])
+
+-- NOTE: A String is not equivalent to List Char in Elm.
+infer _ (String _) =
+    return (Map.empty, Type "String" [])
+
+infer _ (Bool _) =
+    return (Map.empty, Type "Bool" [])
+
+infer gamma (Variable name) =
+    return $ case Map.lookup name gamma of
+        Nothing ->
+            (Map.empty, Error)
+
+        Just t ->
+            (Map.empty, t)
+
+-- TODO: Apply currying for multiple parameters
+infer gamma (AnonymousFunction [param] expr) = do
+    freshTypeVariable <- TypeArg <$> fresh
+    let gamma' = Map.insert param freshTypeVariable gamma
+    (unifier, t) <- infer gamma' expr
+    return (unifier, TypeFunc (applyUnifier unifier freshTypeVariable) t)
+\end{code}
 
 \end{document}
