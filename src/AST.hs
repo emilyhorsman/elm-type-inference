@@ -38,17 +38,17 @@ data Expression
     | BinOp BinOp Expression Expression
     | Negate Expression
     | Constructor String
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 data CaseBranch
     = CaseBranch Pattern Expression
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 data Declaration
     = BoundFunctionDefinition (Maybe Type) String [Pattern] Expression
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 data BinOp
@@ -72,7 +72,7 @@ data BinOp
     | ApplyRight
     | ComposeLeft
     | ComposeRight
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 data Pattern
@@ -89,12 +89,12 @@ data Pattern
     | PatternRecord [String]
     | PatternAlias Pattern String
     | PatternConstructor String [Pattern]
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 data TypeAlias
     = TypeAlias String Type
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 -- Elm's documentation calls this a ``CustomType'' and makes no reference to
@@ -104,12 +104,12 @@ data TypeAlias
 -- Elm used to call these ``union types``.
 data TypeConstructorDefinition
     = TypeConstructorDefinition String [TypeConstructorArg] [Variant]
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 data TypeConstructorArg
     = TypeConstructorArg String
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 type VariantTag = String
@@ -119,7 +119,7 @@ type VariantTag = String
 -- ``data constructors''.
 data Variant
     = Variant VariantTag [Type]
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 -- This type should be accepted by both variants and signatures.
@@ -131,7 +131,7 @@ data Type
     | RecordType (Map.Map String Type)
     | ConstrainedTypeVariable ConstrainedTypeVariable
     | Error
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 -- TODO: This is probably not the best method for handling Elm's four
@@ -141,7 +141,7 @@ data ConstrainedTypeVariable
     | Appendable
     | Comparable
     | Compappend
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 
 data ModuleStatement

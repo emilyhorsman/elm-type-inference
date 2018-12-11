@@ -207,7 +207,9 @@ One uses it with an integer argument and the other a boolean.
 This is legal, but it requires that each usage gets a fresh type variable instead of sharing $\alpha$.
 
 \begin{code}
-infer :: Unifier -> Expression -> TypeVariablesState (Unifier, Type)
+type Environment = Map.Map Expression Type
+
+infer :: Environment -> Expression -> TypeVariablesState (Unifier, Type)
 infer _ (Char _) =
     return (Map.empty, Type "Char" [])
 
@@ -218,8 +220,8 @@ infer _ (String _) =
 infer _ (Bool _) =
     return (Map.empty, Type "Bool" [])
 
-infer gamma (Variable name) =
-    return $ case Map.lookup name gamma of
+infer gamma variable@(Variable _) =
+    return $ case Map.lookup variable gamma of
         Nothing ->
             (Map.empty, Error)
 
@@ -229,7 +231,7 @@ infer gamma (Variable name) =
 -- TODO: Apply currying for multiple parameters
 infer gamma (AnonymousFunction [param] expr) = do
     freshTypeVariable <- TypeArg <$> fresh
-    let gamma' = Map.insert param freshTypeVariable gamma
+    let gamma' = Map.insert (Variable param) freshTypeVariable gamma
     (unifier, t) <- infer gamma' expr
     return (unifier, TypeFunc (applyUnifier unifier freshTypeVariable) t)
 \end{code}
