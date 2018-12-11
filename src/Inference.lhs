@@ -188,23 +188,7 @@ fresh = do
     return $ getFreshVarName state
 \end{code}
 
-Pierce describes a caveat we must solve in the inference algorithm.
-Examine the following code:
-
-\begin{minted}{haskell}
-let
-    id x = x
-in
-    let
-        foo = id 1
-    in
-        id True
-\end{minted}
-
-The outer \texttt{let} binding describes an identity function with type $\forall\, \alpha : \alpha \to \alpha$.
-There are two usages of the identity function.
-One uses it with an integer argument and the other a boolean.
-This is legal, but it requires that each usage gets a fresh type variable instead of sharing $\alpha$.
+Inference time!
 
 \begin{code}
 type Environment = Map.Map Expression Type
@@ -256,5 +240,25 @@ infer gamma (FunctionApplication expr1 expr2) = do
         , applyUnifier unifier3 resultType
         )
 \end{code}
+
+Let-polymorphism time!
+Pierce describes a caveat we must solve in the inference algorithm.
+Examine the following code:
+
+\begin{minted}{haskell}
+let
+    id x = x
+in
+    let
+        foo = id 1
+    in
+        id True
+\end{minted}
+
+The outer \texttt{let} binding describes an identity function with type $\forall\, \alpha : \alpha \to \alpha$.
+There are two usages of the identity function.
+One uses it with an integer argument and the other a boolean.
+This is legal, but it requires that each usage gets a fresh type variable instead of sharing $\alpha$.
+
 
 \end{document}
