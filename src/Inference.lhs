@@ -183,6 +183,7 @@ getFreshVarName = (++) "t" . show
 
 type TypeVariablesState = State Int
 
+-- "t0", "t1", "t2", ...
 fresh :: TypeVariablesState String
 fresh = do
     state <- get
