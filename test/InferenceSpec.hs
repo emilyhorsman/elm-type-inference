@@ -121,15 +121,54 @@ spec = do
                 , TypeFunc (TypeArg "t0") (TypeArg "t0")
                 )
 
-        it "infers with assumption requiring instantiation" $
+        it "infers function application" $
             let
-                assumptions =
-                    (Map.singleton "y" (TypeArg "t0"))
-
-                expression =
-                    (AnonymousFunction ["x"] (Variable "y"))
-            in
-                evalState (infer assumptions expression) 0 `shouldBe`
-                    ( Map.empty
-                    , TypeFunc (TypeArg "t0") (TypeArg "t1")
+                expr =
+                    (FunctionApplication
+                        (AnonymousFunction ["x"] (Variable "x"))
+                        (Bool True)
                     )
+            in
+                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                    Type "Bool" []
+
+        it "infers the left const function" $
+            let
+                expr =
+                    (FunctionApplication
+                        (FunctionApplication
+                            (AnonymousFunction
+                                ["x"]
+                                (AnonymousFunction
+                                    ["y"]
+                                    (Variable "x")
+                                )
+                            )
+                            (Bool True)
+                        )
+                        (Char 'a')
+                    )
+            in
+                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                    Type "Bool" []
+
+        it "infers the right const function" $
+            let
+                expr =
+                    (FunctionApplication
+                        (FunctionApplication
+                            (AnonymousFunction
+                                ["x"]
+                                (AnonymousFunction
+                                    ["y"]
+                                    (Variable "y")
+                                )
+                            )
+                            (Bool True)
+                        )
+                        (Char 'a')
+                    )
+            in
+                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                    Type "Char" []
+

@@ -193,7 +193,6 @@ Examine the following code:
 
 \begin{minted}{haskell}
 let
-    id : a -> a
     id x = x
 in
     let
@@ -201,6 +200,11 @@ in
     in
         id True
 \end{minted}
+
+The outer \texttt{let} binding describes an identity function with type $\forall\, \alpha : \alpha \to \alpha$.
+There are two usages of the identity function.
+One uses it with an integer argument and the other a boolean.
+This is legal, but it requires that each usage gets a fresh type variable instead of sharing $\alpha$.
 
 \begin{code}
 infer :: Unifier -> Expression -> TypeVariablesState (Unifier, Type)
@@ -228,6 +232,27 @@ infer gamma (AnonymousFunction [param] expr) = do
     let gamma' = Map.insert param freshTypeVariable gamma
     (unifier, t) <- infer gamma' expr
     return (unifier, TypeFunc (applyUnifier unifier freshTypeVariable) t)
+\end{code}
+
+Function application is trickier.
+We need to infer the function we're applying to (call this $t_1$) and then infer the argument we're applying (call this $t_2$).
+The type of the result is $t_3$.
+We want to produce a unifier $\sigma$ such that $\sigma(t_1) = \sigma(t_2 \to t_3)$.
+
+\begin{code}
+infer gamma (FunctionApplication expr1 expr2) = do
+    (unifier1, type1) <- infer gamma expr1
+    let gamma' = Map.map (applyUnifier unifier1) gamma
+    (unifier2, type2) <- infer gamma' expr2
+    resultType <- TypeArg <$> fresh
+    let curried = TypeFunc type2 resultType
+    -- Whichever constraints we learned from inferring $t_2$ must be applied to
+    -- $t_1$ since they have been independent until now.
+    let unifier3 = unify (applyUnifier unifier2 type1) curried
+    return $
+        ( composeUnifier (composeUnifier unifier3 unifier2) unifier1
+        , applyUnifier unifier3 resultType
+        )
 \end{code}
 
 \end{document}
