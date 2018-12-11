@@ -21,6 +21,8 @@
 
 \ignore{
 \begin{code}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE TupleSections #-}
 module Inference where
 
 import Control.Monad.State
@@ -191,7 +193,44 @@ fresh = do
 Inference time!
 
 \begin{code}
-type Environment = Map.Map Expression Type
+data TypeScheme = TypeScheme
+    { bound :: Set.Set String
+    , scheme :: Type
+    }
+type Environment = Map.Map Expression TypeScheme
+
+removeKeys map keys =
+    foldr Map.delete map keys
+
+-- It wouldn't make sense to apply the unifier to the bound variables in the
+-- type scheme.
+apply :: Unifier -> TypeScheme -> TypeScheme
+apply unifier t@(TypeScheme {bound, scheme}) =
+    t { scheme = applyUnifier (removeKeys unifier bound) scheme }
+
+-- Produce a fresh type variable for every bound type variable.
+instantiate :: TypeScheme -> TypeVariablesState Type
+instantiate (TypeScheme {bound, scheme}) = do
+    let bound' = Set.elems bound
+    freshTypeVariableNames <- mapM (const fresh) bound'
+    let freshTypeVariables = TypeArg <$> freshTypeVariableNames
+    let unifier = Map.fromList $ zip bound' freshTypeVariables
+    return $ applyUnifier unifier scheme
+
+freeTypeVariablesScheme :: TypeScheme -> Set.Set String
+freeTypeVariablesScheme (TypeScheme {bound, scheme}) =
+    Set.difference (freeTypeVariables scheme) bound
+
+-- TODO: Clean this mess up into some type classes.
+freeTypeVariablesEnv :: Environment -> Set.Set String
+freeTypeVariablesEnv gamma =
+    Set.unions $ freeTypeVariablesScheme <$> Map.elems gamma
+
+generalize :: Environment -> Type -> TypeScheme
+generalize gamma t = TypeScheme
+    { bound = Set.difference (freeTypeVariables t) (freeTypeVariablesEnv gamma)
+    , scheme = t
+    }
 
 infer :: Environment -> Expression -> TypeVariablesState (Unifier, Type)
 infer _ (Char _) =
@@ -205,17 +244,20 @@ infer _ (Bool _) =
     return (Map.empty, Type "Bool" [])
 
 infer gamma variable@(Variable _) =
-    return $ case Map.lookup variable gamma of
+    case Map.lookup variable gamma of
         Nothing ->
-            (Map.empty, Error)
+            return (Map.empty, Error)
 
-        Just t ->
-            (Map.empty, t)
+        Just scheme -> do
+            t <- instantiate scheme
+            return (Map.empty, t)
 
 -- TODO: Apply currying for multiple parameters
+-- TODO: Handle nullary functions
 infer gamma (AnonymousFunction [param] expr) = do
     freshTypeVariable <- TypeArg <$> fresh
-    let gamma' = Map.insert (Variable param) freshTypeVariable gamma
+    let scheme = TypeScheme { bound = Set.empty, scheme = freshTypeVariable }
+    let gamma' = Map.insert (Variable param) scheme gamma
     (unifier, t) <- infer gamma' expr
     return (unifier, TypeFunc (applyUnifier unifier freshTypeVariable) t)
 \end{code}
@@ -228,7 +270,7 @@ We want to produce a unifier $\sigma$ such that $\sigma(t_1) = \sigma(t_2 \to t_
 \begin{code}
 infer gamma (FunctionApplication expr1 expr2) = do
     (unifier1, type1) <- infer gamma expr1
-    let gamma' = Map.map (applyUnifier unifier1) gamma
+    let gamma' = Map.map (apply unifier1) gamma
     (unifier2, type2) <- infer gamma' expr2
     resultType <- TypeArg <$> fresh
     let curried = TypeFunc type2 resultType
@@ -259,6 +301,19 @@ The outer \texttt{let} binding describes an identity function with type $\forall
 There are two usages of the identity function.
 One uses it with an integer argument and the other a boolean.
 This is legal, but it requires that each usage gets a fresh type variable instead of sharing $\alpha$.
+However, we only want to give usages a fresh type variable for the bound type variables.
+This means that we must know which of the type variables in an assumption/environment $\Gamma$ are bound.
 
+\begin{code}
+-- TODO: Handle multiple declarations.
+-- TODO: Handle pattern matching. :sweat_smile:
+infer gamma (LetBinding [BoundFunctionDefinition Nothing name [PatternVariable param] body] letExpr) = do
+    (unifier1, bindingType) <- infer gamma (AnonymousFunction [param] body)
+    let gamma' = Map.map (apply unifier1) gamma
+    let scheme = generalize gamma' bindingType
+    let gamma'' = Map.insert (Variable name) scheme gamma'
+    (unifier2, letBodyType) <- infer gamma'' letExpr
+    return (composeUnifier unifier1 unifier2, letBodyType)
+\end{code}
 
 \end{document}

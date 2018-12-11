@@ -172,3 +172,43 @@ spec = do
                 snd (evalState (infer Map.empty expr) 0) `shouldBe`
                     Type "Char" []
 
+        it "infers a let binding" $
+            let
+                expr =
+                    (LetBinding
+                        [ BoundFunctionDefinition
+                            Nothing
+                            "x"
+                            [PatternVariable "y"]
+                            (Variable "y")
+                        ]
+                        (FunctionApplication (Variable "x") (Bool True))
+                    )
+            in
+                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                    Type "Bool" []
+
+        it "handles let polymorphism" $
+            let
+                expr =
+                    (LetBinding
+                        [ BoundFunctionDefinition
+                            Nothing
+                            "f"
+                            [PatternVariable "x"]
+                            (Variable "x")
+                        ]
+                        (LetBinding
+                            [ BoundFunctionDefinition
+                                Nothing
+                                "g"
+                                [PatternVariable "y"]
+                                (FunctionApplication (Variable "f") (Char 'a'))
+                            ]
+                            (FunctionApplication (Variable "f") (Bool True))
+                        )
+                    )
+            in
+                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                    Type "Bool" []
+
