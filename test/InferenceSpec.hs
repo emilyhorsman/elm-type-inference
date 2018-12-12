@@ -317,54 +317,39 @@ spec = do
                 snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
-        it "infers a data constructor/variant" $
+        it "infers a bare nullary data constructor/variant" $
+            let
+                expr =
+                    Constructor "Nothing"
+            in
+                snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
+                    Type "Maybe" [TypeArg "t0"]
+
+        it "infers a bare nullary data constructor/variant" $
+            let
+                expr =
+                    Constructor "Just"
+            in
+                snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
+                    TypeFunc (TypeArg "t0") (Type "Maybe" [TypeArg "t0"])
+
+        it "infers a application data constructor/variant" $
             let
                 expr =
                     FunctionApplication
                         (Constructor "Just")
                         (Bool True)
             in
-                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Maybe" [Type "Bool" []]
 
     describe "constructDefinitions" $
         it "constructs a correct map" $
-            let
-                nothing =
-                    Variant "Nothing" []
-
-                just =
-                    Variant "Just" [TypeArg "a"]
-
-                maybeDef =
-                    TypeConstructorDefinition
-                        "Maybe"
-                        [TypeConstructorArg "a"]
-                        [nothing, just]
-
-                left =
-                    Variant "Left" [TypeArg "a"]
-
-                right =
-                    Variant "Right" [TypeArg "b"]
-
-                eitherDef =
-                    TypeConstructorDefinition
-                        "Either"
-                        [TypeConstructorArg "a", TypeConstructorArg "b"]
-                        [left, right]
-
-                definitions :: [TypeConstructorDefinition]
-                definitions =
-                    [ maybeDef
-                    , eitherDef
-                    ]
-            in
-                constructDefinitions definitions `shouldBe`
-                    Definitions
-                        (Map.fromList
-                            [ ("Nothing", (nothing, maybeDef))
-                            , ("Just", (just, maybeDef))
-                            , ("Left", (left, eitherDef))
-                            , ("Right", (right, eitherDef))
-                            ])
+            standardDefinitions `shouldBe`
+                Definitions
+                    (Map.fromList
+                        [ ("Nothing", (nothing, maybeDef))
+                        , ("Just", (just, maybeDef))
+                        , ("Left", (left, eitherDef))
+                        , ("Right", (right, eitherDef))
+                        ])

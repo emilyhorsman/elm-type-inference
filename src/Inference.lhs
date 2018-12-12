@@ -282,6 +282,43 @@ constructDefinitions (def@(TypeConstructorDefinition _ args variants) : defs) =
             map
 \end{code}
 
+Take the following Elm custom type.
+
+\begin{minted}{elm}
+type Maybe a = Nothing | Just a
+\end{minted}
+
+The variants \texttt{Nothing} and \texttt{Just} require types.
+Using either of them will return a \texttt{Maybe a}.
+We must instantiate a fresh type variable for the type constructor parameters similarly to the instantiation we did for let-polymorphism.
+In this case, we'll produce a mapping $a \mapsto t_i$ where $t_i$ is a fresh type variable.
+\texttt{Nothing} will have type $\texttt{Maybe}\, t_i$ whereas a usage like \texttt{Just True} will have type \texttt{Maybe Bool}.
+Instead of inferring \texttt{Just True} monolithically, we infer \texttt{Just} to be the function type $\alpha \to \texttt{Maybe}\,\alpha$ and then apply \texttt{True}.
+
+\begin{code}
+constructorType :: Map.Map String Type -> Type -> [Type] -> Type
+constructorType _ resultType [] =
+    resultType
+
+constructorType typeVarMap resultType (TypeArg var : args) =
+    case Map.lookup var typeVarMap of
+        Nothing ->
+            Error
+
+        Just t ->
+            TypeFunc t (constructorType typeVarMap resultType args)
+
+instantiateConstructor :: (Variant, TypeConstructorDefinition) -> TypeVariablesState Type
+instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName args _) = do
+    freshTypeVariableNames <- mapM (const fresh) args
+    let freshTypeVariables = TypeArg <$> freshTypeVariableNames
+    let resultType = Type typeName freshTypeVariables
+    let typeVarMap = Map.fromList $ zip
+            (map (\(TypeConstructorArg a) -> a) args)
+            freshTypeVariables
+    return $ constructorType typeVarMap resultType types
+\end{code}
+
 Base types are trivial to infer.
 
 \begin{code}
@@ -424,6 +461,20 @@ This means we can simply infer the type $\alpha$ of one of the branches.
 \begin{code}
 infer defs gamma (If _ trueBranch _) =
     infer defs gamma trueBranch
+\end{code}
+
+Inferring the type of a data constructor/variant usage requires looking up the variant tag in the definitions map.
+We then build a type from the variant using \texttt{instantiateConstructor}.
+
+\begin{code}
+infer (Definitions defs) gamma (Constructor tag) =
+    case Map.lookup tag defs of
+        Nothing ->
+            error $ "`" ++ tag ++ "` is not in definitions."
+
+        Just pair -> do
+            t <- instantiateConstructor pair
+            return (Map.empty, t)
 \end{code}
 
 \end{document}

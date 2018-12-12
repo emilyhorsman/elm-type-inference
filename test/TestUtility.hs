@@ -6,6 +6,7 @@ import System.FilePath
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
 
+import AST
 import Inference
 import Lib
 import ParserDefinition
@@ -26,6 +27,38 @@ emptyEnvironment = Environment $ Map.empty
 
 emptyDefinitions :: Definitions
 emptyDefinitions = Definitions $ Map.empty
+
+nothing =
+    Variant "Nothing" []
+
+just =
+    Variant "Just" [TypeArg "a"]
+
+maybeDef =
+    TypeConstructorDefinition
+        "Maybe"
+        [TypeConstructorArg "a"]
+        [nothing, just]
+
+left =
+    Variant "Left" [TypeArg "a"]
+
+right =
+    Variant "Right" [TypeArg "b"]
+
+eitherDef =
+    TypeConstructorDefinition
+        "Either"
+        [TypeConstructorArg "a", TypeConstructorArg "b"]
+        [left, right]
+
+
+standardDefinitions :: Definitions
+standardDefinitions =
+    constructDefinitions
+        [ maybeDef
+        , eitherDef
+        ]
 
 
 parseInfer expr =
