@@ -44,7 +44,6 @@ import AST
 \item [Free type variable]
     A type variable in a type that is not bound by a quantifier.
     In the type $\forall\, \alpha : \alpha \to \beta$ the bound variables are $\{\alpha\}$ and the free variables are $\{\beta\}$.
-    The primary example of this is a function: $\lambda x \to x$ has a type $\forall\, x \to x$.
 \end{description}
 
 \subsection{Type Substitutions (Unifiers)}
@@ -58,6 +57,10 @@ type Unifier = Map.Map VariableName Type
 If we have a unifier $\sigma = [X \mapsto \texttt{Bool}]$ then we can apply it to the type $T = X \to X$ as follows.
 
 $$\sigma T = \sigma(X \to X) = \texttt{Bool} \to \texttt{Bool}$$
+
+We'll need to apply a unifier's mapping on to types, type schemes, and environments.
+We also require knowing the free type variables of each for avoiding infinite types, instantiation, and generalization.
+It's worth creating a type class \texttt{Typing} for this.
 
 \begin{code}
 class Typing t where
@@ -93,7 +96,7 @@ instance Typing Type where
 \end{code}
 
 The unification algorithm requires a composition operator for unifiers.
-Pierce defines it with the following set comprehension.
+Pierce defines it with the following set comprehension.\piercefootnote{318}
 
 $$
 \sigma \circ \gamma = \begin{cases}
@@ -192,7 +195,7 @@ fromList [("a",Type "List" [Type "Char" []]),("b",Type "Char" [])]
 
 \subsection{Inference}
 
-Implicit type annotations (see 22.6 of Pierce) requires generating fresh type variables.
+Implicit type annotations (see 22.6 of Pierce\piercefootnote{330}) requires generating fresh type variables.
 
 \begin{code}
 getFreshVarName :: Int -> String
