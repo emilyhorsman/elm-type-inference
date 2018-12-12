@@ -24,10 +24,14 @@ emptyEnvironment :: Environment
 emptyEnvironment = Environment $ Map.empty
 
 
+emptyDefinitions :: Definitions
+emptyDefinitions = Definitions $ Map.empty
+
+
 parseInfer expr =
     case (parse expression "" expr) of
         Left _ ->
             error "Could not parse."
 
         Right e ->
-            snd (evalState (infer emptyEnvironment e) 0)
+            snd (evalState (infer emptyDefinitions emptyEnvironment e) 0)

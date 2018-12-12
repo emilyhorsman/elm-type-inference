@@ -285,17 +285,17 @@ constructDefinitions (def@(TypeConstructorDefinition _ args variants) : defs) =
 Base types are trivial to infer.
 
 \begin{code}
-infer :: Environment -> Expression -> TypeVariablesState (Unifier, Type)
+infer :: Definitions -> Environment -> Expression -> TypeVariablesState (Unifier, Type)
 -- TODO: comparable constrained type variable
-infer _ (Char _) =
+infer _ _ (Char _) =
     return (Map.empty, Type "Char" [])
 
 -- NOTE: A String is not equivalent to List Char in Elm.
 -- TODO: appendable, compappend constrained type variables
-infer _ (String _) =
+infer _ _ (String _) =
     return (Map.empty, Type "String" [])
 
-infer _ (Bool _) =
+infer _ _ (Bool _) =
     return (Map.empty, Type "Bool" [])
 \end{code}
 
@@ -303,7 +303,7 @@ We must instantiate the type scheme we get from the environment.
 See Step 5 in Pierce\piercefootnote{334}.
 
 \begin{code}
-infer (Environment gamma) variable@(Variable name) =
+infer _ (Environment gamma) variable@(Variable name) =
     case Map.lookup variable gamma of
         Nothing ->
             error $ name ++ " is unbound."
@@ -312,19 +312,19 @@ infer (Environment gamma) variable@(Variable name) =
             t <- instantiate scheme
             return (Map.empty, t)
 
-infer gamma (AnonymousFunction [] expr) =
-    infer gamma expr
+infer defs gamma (AnonymousFunction [] expr) =
+    infer defs gamma expr
 
 -- TODO: Handle pattern matching. :sweat_smile:
-infer gamma (AnonymousFunction [PatternVariable param] expr) = do
+infer defs gamma (AnonymousFunction [PatternVariable param] expr) = do
     freshTypeVariable <- TypeArg <$> fresh
     let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
     let gamma' = assign gamma param scheme
-    (unifier, t) <- infer gamma' expr
+    (unifier, t) <- infer defs gamma' expr
     return (unifier, TypeFunc (apply unifier freshTypeVariable) t)
 
-infer gamma (AnonymousFunction (param : params) expr) = do
-    infer gamma $
+infer defs gamma (AnonymousFunction (param : params) expr) = do
+    infer defs gamma $
         AnonymousFunction
             [param]
             (AnonymousFunction params expr)
@@ -336,10 +336,10 @@ The type of the result is $t_3$.
 We want to produce a unifier $\sigma$ such that $\sigma(t_1) = \sigma(t_2 \to t_3)$.
 
 \begin{code}
-infer gamma (FunctionApplication expr1 expr2) = do
-    (unifier1, type1) <- infer gamma expr1
+infer defs gamma (FunctionApplication expr1 expr2) = do
+    (unifier1, type1) <- infer defs gamma expr1
     let gamma' = apply unifier1 gamma
-    (unifier2, type2) <- infer gamma' expr2
+    (unifier2, type2) <- infer defs gamma' expr2
     resultType <- TypeArg <$> fresh
     let curried = TypeFunc type2 resultType
     -- Whichever constraints we learned from inferring $t_2$ must be applied to
@@ -385,34 +385,34 @@ The following test fails from attempting to unify \texttt{Char} and \texttt{Bool
 Highlighted in \colorbox{yellow}{yellow} are the multiple usages of \texttt{f} which require fresh instantiations.
 
 \begin{code}
-infer gamma (LetBinding [BoundFunctionDefinition Nothing name patterns body] letExpr) = do
-    (unifier1, bindingType) <- infer gamma (AnonymousFunction patterns body)
+infer defs gamma (LetBinding [BoundFunctionDefinition Nothing name patterns body] letExpr) = do
+    (unifier1, bindingType) <- infer defs gamma (AnonymousFunction patterns body)
     let gamma' = apply unifier1 gamma
     let scheme = generalize gamma' bindingType
     let gamma'' = assign gamma' name scheme
-    (unifier2, letBodyType) <- infer gamma'' letExpr
+    (unifier2, letBodyType) <- infer defs gamma'' letExpr
     return (composeUnifier unifier1 unifier2, letBodyType)
 
-infer gamma (LetBinding (decl : decls) letExpr) =
-    infer gamma $ LetBinding [decl] (LetBinding decls letExpr)
+infer defs gamma (LetBinding (decl : decls) letExpr) =
+    infer defs gamma $ LetBinding [decl] (LetBinding decls letExpr)
 \end{code}
 
 We assume the child type of a \texttt{List} type is inferred from its first member.
 
 \begin{code}
 -- TODO: comparable, compappend, appendable constrained type variables
-infer gamma (List []) = do
+infer _ gamma (List []) = do
     typeArg <- TypeArg <$> fresh
     return (Map.empty, Type "List" [typeArg])
 
-infer gamma (List (car : cdr)) = do
-    (unifier, childType) <- infer gamma car
+infer defs gamma (List (car : cdr)) = do
+    (unifier, childType) <- infer defs gamma car
     return (unifier, Type "List" [childType])
 \end{code}
 
 \begin{code}
-infer gamma (Tuple children) = do
-    pairs <- mapM (infer gamma) children
+infer defs gamma (Tuple children) = do
+    pairs <- mapM (infer defs gamma) children
     let unifier = foldr composeUnifier Map.empty $ fst <$> pairs
     return (unifier, TupleType $ snd <$> pairs)
 \end{code}
@@ -422,8 +422,8 @@ We're only worried about inference and not type checking.
 This means we can simply infer the type $\alpha$ of one of the branches.
 
 \begin{code}
-infer gamma (If _ trueBranch _) =
-    infer gamma trueBranch
+infer defs gamma (If _ trueBranch _) =
+    infer defs gamma trueBranch
 \end{code}
 
 \end{document}

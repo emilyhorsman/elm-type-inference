@@ -119,7 +119,7 @@ spec = do
 
     describe "infer" $ do
         it "infers the identity function" $
-            evalState (infer emptyEnvironment (AnonymousFunction [PatternVariable "x"] (Variable "x"))) 0 `shouldBe`
+            evalState (infer emptyDefinitions emptyEnvironment (AnonymousFunction [PatternVariable "x"] (Variable "x"))) 0 `shouldBe`
                 ( Map.empty
                 , TypeFunc (TypeArg "t0") (TypeArg "t0")
                 )
@@ -132,7 +132,7 @@ spec = do
                         (Bool True)
                     )
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "infers the left const function" $
@@ -152,7 +152,7 @@ spec = do
                         (Char 'a')
                     )
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "infers the right const function" $
@@ -172,7 +172,7 @@ spec = do
                         (Char 'a')
                     )
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Char" []
 
         it "infers a let binding" $
@@ -188,7 +188,7 @@ spec = do
                         (FunctionApplication (Variable "x") (Bool True))
                     )
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "handles let polymorphism" $
@@ -216,21 +216,21 @@ spec = do
                         )
                     )
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "handles nullary functions" $
             let
                 expr = AnonymousFunction [] (Bool True)
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "handles functions with arity > 1" $
             let
                 expr = AnonymousFunction (PatternVariable <$> ["x", "y", "z"]) (Bool True)
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     TypeFunc
                         (TypeArg "t0")
                         (TypeFunc
@@ -279,15 +279,15 @@ spec = do
                         (FunctionApplication (Variable "f") (Bool True))
                     )
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "infers an empty list" $
-            snd (evalState (infer emptyEnvironment (List [])) 0) `shouldBe`
+            snd (evalState (infer emptyDefinitions emptyEnvironment (List [])) 0) `shouldBe`
                 Type "List" [TypeArg "t0"]
 
         it "infers a list" $
-            snd (evalState (infer emptyEnvironment (List [Bool True, Bool False])) 0) `shouldBe`
+            snd (evalState (infer emptyDefinitions emptyEnvironment (List [Bool True, Bool False])) 0) `shouldBe`
                 Type "List" [Type "Bool" []]
 
         it "infers a tuple" $
@@ -299,7 +299,7 @@ spec = do
                         , Char 'a'
                         ]
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     TupleType
                         [ Type "Bool" []
                         , Type "String" []
@@ -314,7 +314,7 @@ spec = do
                         (Bool True)
                         (Bool False)
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "infers a data constructor/variant" $
@@ -324,7 +324,7 @@ spec = do
                         (Constructor "Just")
                         (Bool True)
             in
-                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Maybe" [Type "Bool" []]
 
     describe "constructDefinitions" $
