@@ -9,18 +9,22 @@ import AST
 import Inference
 
 
+emptyEnvironment :: Environment
+emptyEnvironment = Environment $ Map.empty
+
+
 spec :: Spec
 spec = do
     describe "applyUnifier" $ do
         it "substitutes a type argument" $
-            applyUnifier (Map.singleton "a" (Type "Char" [])) (TypeArg "a") `shouldBe`
+            apply (Map.singleton "a" (Type "Char" [])) (TypeArg "a") `shouldBe`
                 Type "Char" []
 
         it "empty substitution acts as identity" $
-            applyUnifier Map.empty (TypeArg "a") `shouldBe` TypeArg "a"
+            apply Map.empty (TypeArg "a") `shouldBe` TypeArg "a"
 
         it "substitution does nothing without type arguments" $
-            applyUnifier (Map.singleton "a" (Type "Char" [])) (Type "Int" []) `shouldBe`
+            apply (Map.singleton "a" (Type "Char" [])) (Type "Int" []) `shouldBe`
                 Type "Int" []
 
         it "substitutes a function type" $
@@ -30,7 +34,7 @@ spec = do
                     , ("b", Type "Bool" [])
                     ]
             in
-                applyUnifier u (TypeFunc (TypeArg "a") (TypeArg "b")) `shouldBe`
+                apply u (TypeFunc (TypeArg "a") (TypeArg "b")) `shouldBe`
                     TypeFunc (Type "Char" []) (Type "Bool" [])
 
     describe "unify" $ do
@@ -116,7 +120,7 @@ spec = do
 
     describe "infer" $ do
         it "infers the identity function" $
-            evalState (infer Map.empty (AnonymousFunction ["x"] (Variable "x"))) 0 `shouldBe`
+            evalState (infer emptyEnvironment (AnonymousFunction ["x"] (Variable "x"))) 0 `shouldBe`
                 ( Map.empty
                 , TypeFunc (TypeArg "t0") (TypeArg "t0")
                 )
@@ -129,7 +133,7 @@ spec = do
                         (Bool True)
                     )
             in
-                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "infers the left const function" $
@@ -149,7 +153,7 @@ spec = do
                         (Char 'a')
                     )
             in
-                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "infers the right const function" $
@@ -169,7 +173,7 @@ spec = do
                         (Char 'a')
                     )
             in
-                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
                     Type "Char" []
 
         it "infers a let binding" $
@@ -185,30 +189,33 @@ spec = do
                         (FunctionApplication (Variable "x") (Bool True))
                     )
             in
-                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
 
         it "handles let polymorphism" $
             let
+                f =
+                    BoundFunctionDefinition
+                        Nothing
+                        "f"
+                        [PatternVariable "x"]
+                        (Variable "x")
+
+                g =
+                    BoundFunctionDefinition
+                        Nothing
+                        "g"
+                        [PatternVariable "y"]
+                        (FunctionApplication (Variable "f") (Char 'a'))
+
                 expr =
                     (LetBinding
-                        [ BoundFunctionDefinition
-                            Nothing
-                            "f"
-                            [PatternVariable "x"]
-                            (Variable "x")
-                        ]
+                        [f]
                         (LetBinding
-                            [ BoundFunctionDefinition
-                                Nothing
-                                "g"
-                                [PatternVariable "y"]
-                                (FunctionApplication (Variable "f") (Char 'a'))
-                            ]
+                            [g]
                             (FunctionApplication (Variable "f") (Bool True))
                         )
                     )
             in
-                snd (evalState (infer Map.empty expr) 0) `shouldBe`
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
-

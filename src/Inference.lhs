@@ -16,6 +16,7 @@
     curlyquotes=true
     ]{haskell}}{\end{minted}}
 \newenvironment{spec}{\VerbatimEnvironment\begin{minted}{haskell}}{\end{minted}}
+\newcommand{\piercefootnote}[1]{\footnote{Types and Programming Languages, Pierce p. #1}}
 
 \begin{document}
 
@@ -35,12 +36,23 @@ import AST
 
 \section{Type Inference}
 
+\subsection{Terminology}
+
+\begin{description}
+\item [Unifier]
+    A type substitution $\sigma$ that maps type variables to types.
+\item [Free type variable]
+    A type variable in a type that is not bound by a quantifier.
+    In the type $\forall\, \alpha : \alpha \to \beta$ the bound variables are $\{\alpha\}$ and the free variables are $\{\beta\}$.
+    The primary example of this is a function: $\lambda x \to x$ has a type $\forall\, x \to x$.
+\end{description}
+
 \subsection{Type Substitutions (Unifiers)}
 
-A type substitution or `unifier' $\sigma$ is a mapping from type variables to types.
-
 \begin{code}
-type Unifier = Map.Map String Type
+type VariableName = String
+
+type Unifier = Map.Map VariableName Type
 \end{code}
 
 If we have a unifier $\sigma = [X \mapsto \texttt{Bool}]$ then we can apply it to the type $T = X \to X$ as follows.
@@ -48,19 +60,36 @@ If we have a unifier $\sigma = [X \mapsto \texttt{Bool}]$ then we can apply it t
 $$\sigma T = \sigma(X \to X) = \texttt{Bool} \to \texttt{Bool}$$
 
 \begin{code}
-applyUnifier :: Unifier -> Type -> Type
-applyUnifier unifier t@(TypeArg x) =
-    Map.findWithDefault t x unifier
+class Typing t where
+    apply :: Unifier -> t -> t
+    freeVariables :: t -> Set.Set VariableName
 
-applyUnifier unifier (Type constructorName types) =
-    Type constructorName $ applyUnifier unifier <$> types
+instance Typing Type where
+    apply unifier t@(TypeArg x) =
+        Map.findWithDefault t x unifier
 
-applyUnifier unifier (TypeFunc a b) =
-    TypeFunc (applyUnifier unifier a) (applyUnifier unifier b)
+    apply unifier (Type constructorName types) =
+        Type constructorName $ apply unifier <$> types
 
--- TODO
-applyUnifier _ _ =
-    Error
+    apply unifier (TypeFunc a b) =
+        TypeFunc (apply unifier a) (apply unifier b)
+
+    -- TODO
+    apply _ _ =
+        error "Not yet implemented!"
+
+    freeVariables (TypeArg var) =
+        Set.singleton var
+
+    freeVariables (TypeFunc left right) =
+        Set.union (freeVariables left) (freeVariables right)
+
+    freeVariables (Type _ types) =
+        Set.unions $ freeVariables <$> types
+
+    -- TODO
+    freeVariables _ =
+        error "Not yet implemented!"
 \end{code}
 
 The unification algorithm requires a composition operator for unifiers.
@@ -77,31 +106,19 @@ That is, apply the unifier $\sigma$ to the mappings in $\gamma$ and then union t
 
 \begin{code}
 composeUnifier :: Unifier -> Unifier -> Unifier
-composeUnifier sigma gamma =
+composeUnifier u1 u2 =
     let
-        mappedGamma =
-            Map.map (applyUnifier sigma) gamma
+        u2' =
+            Map.map (apply u1) u2
     in
         -- From the Map.union docs: `takes the left biased union of t1 and t2.
         -- It prefers t1 when duplicate keys are encountered.'
         -- We want mappedGamma to be the left map since mappings in $\sigma$
         -- are excluded if their type variable is in the domain of $\gamma$.
-        Map.union mappedGamma sigma
+        Map.union u2' u1
 \end{code}
 
 \subsection{Unification}
-
-\begin{code}
-freeTypeVariables :: Type -> Set.Set String
-freeTypeVariables (TypeArg var) =
-    Set.singleton var
-
-freeTypeVariables (TypeFunc left right) =
-    Set.union (freeTypeVariables left) (freeTypeVariables right)
-
-freeTypeVariables (Type _ types) =
-    Set.unions $ freeTypeVariables <$> types
-\end{code}
 
 We want to ensure we do not produce an infinite type when assigning a type variable to a type.
 Thus, there is no defined unifier for $a$ and $\texttt{List}\, a$ as $[a \mapsto \texttt{List}\, a]$ would produce an infinite type.
@@ -114,7 +131,7 @@ infiniteTypeErrorMessage =
 assignType :: Type -> Type -> Unifier
 assignType t1@(TypeArg name) t2
     | t1 == t2 = Map.empty
-    | Set.member name (freeTypeVariables t2) = error infiniteTypeErrorMessage
+    | Set.member name (freeVariables t2) = error infiniteTypeErrorMessage
     | otherwise = Map.singleton name t2
 \end{code}
 
@@ -131,8 +148,8 @@ unify (TypeFunc left right) (TypeFunc left' right') =
             unify left left'
         rightUnifier =
             unify
-                (applyUnifier leftUnifier right)
-                (applyUnifier leftUnifier right')
+                (apply leftUnifier right)
+                (apply leftUnifier right')
     in
         composeUnifier rightUnifier leftUnifier
 
@@ -196,42 +213,45 @@ Inference time!
 \begin{code}
 data TypeScheme = TypeScheme
     { bound :: Set.Set String
-    , scheme :: Type
+    , body :: Type
     }
-type Environment = Map.Map Expression TypeScheme
+data Environment = Environment (Map.Map Expression TypeScheme)
 
 removeKeys map keys =
     foldr Map.delete map keys
 
--- It wouldn't make sense to apply the unifier to the bound variables in the
--- type scheme.
-apply :: Unifier -> TypeScheme -> TypeScheme
-apply unifier t@(TypeScheme {bound, scheme}) =
-    t { scheme = applyUnifier (removeKeys unifier bound) scheme }
+instance Typing TypeScheme where
+    apply unifier t@(TypeScheme {bound, body}) =
+        t { body = apply (removeKeys unifier bound) body }
+
+    freeVariables (TypeScheme {bound, body}) =
+        Set.difference (freeVariables body) bound
+
+instance Typing Environment where
+    apply unifier (Environment gamma) =
+        Environment $ Map.map (apply unifier) gamma
+
+    freeVariables (Environment gamma) =
+        Set.unions $ freeVariables <$> Map.elems gamma
 
 -- Produce a fresh type variable for every bound type variable.
 instantiate :: TypeScheme -> TypeVariablesState Type
-instantiate (TypeScheme {bound, scheme}) = do
+instantiate (TypeScheme {bound, body}) = do
     let bound' = Set.elems bound
     freshTypeVariableNames <- mapM (const fresh) bound'
     let freshTypeVariables = TypeArg <$> freshTypeVariableNames
     let unifier = Map.fromList $ zip bound' freshTypeVariables
-    return $ applyUnifier unifier scheme
-
-freeTypeVariablesScheme :: TypeScheme -> Set.Set String
-freeTypeVariablesScheme (TypeScheme {bound, scheme}) =
-    Set.difference (freeTypeVariables scheme) bound
-
--- TODO: Clean this mess up into some type classes.
-freeTypeVariablesEnv :: Environment -> Set.Set String
-freeTypeVariablesEnv gamma =
-    Set.unions $ freeTypeVariablesScheme <$> Map.elems gamma
+    return $ apply unifier body
 
 generalize :: Environment -> Type -> TypeScheme
 generalize gamma t = TypeScheme
-    { bound = Set.difference (freeTypeVariables t) (freeTypeVariablesEnv gamma)
-    , scheme = t
+    { bound = Set.difference (freeVariables t) (freeVariables gamma)
+    , body = t
     }
+
+assign :: Environment -> VariableName -> TypeScheme -> Environment
+assign (Environment gamma) param scheme =
+    Environment $ Map.insert (Variable param) scheme gamma
 
 infer :: Environment -> Expression -> TypeVariablesState (Unifier, Type)
 infer _ (Char _) =
@@ -243,11 +263,16 @@ infer _ (String _) =
 
 infer _ (Bool _) =
     return (Map.empty, Type "Bool" [])
+\end{code}
 
-infer gamma variable@(Variable _) =
+We must instantiate the type scheme we get from the environment.
+See Step 5 in Pierce\piercefootnote{334}.
+
+\begin{code}
+infer (Environment gamma) variable@(Variable name) =
     case Map.lookup variable gamma of
         Nothing ->
-            return (Map.empty, Error)
+            error $ name ++ " is unbound."
 
         Just scheme -> do
             t <- instantiate scheme
@@ -257,10 +282,10 @@ infer gamma variable@(Variable _) =
 -- TODO: Handle nullary functions
 infer gamma (AnonymousFunction [param] expr) = do
     freshTypeVariable <- TypeArg <$> fresh
-    let scheme = TypeScheme { bound = Set.empty, scheme = freshTypeVariable }
-    let gamma' = Map.insert (Variable param) scheme gamma
+    let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
+    let gamma' = assign gamma param scheme
     (unifier, t) <- infer gamma' expr
-    return (unifier, TypeFunc (applyUnifier unifier freshTypeVariable) t)
+    return (unifier, TypeFunc (apply unifier freshTypeVariable) t)
 \end{code}
 
 Function application is trickier.
@@ -271,16 +296,16 @@ We want to produce a unifier $\sigma$ such that $\sigma(t_1) = \sigma(t_2 \to t_
 \begin{code}
 infer gamma (FunctionApplication expr1 expr2) = do
     (unifier1, type1) <- infer gamma expr1
-    let gamma' = Map.map (apply unifier1) gamma
+    let gamma' = apply unifier1 gamma
     (unifier2, type2) <- infer gamma' expr2
     resultType <- TypeArg <$> fresh
     let curried = TypeFunc type2 resultType
     -- Whichever constraints we learned from inferring $t_2$ must be applied to
     -- $t_1$ since they have been independent until now.
-    let unifier3 = unify (applyUnifier unifier2 type1) curried
+    let unifier3 = unify (apply unifier2 type1) curried
     return $
         ( composeUnifier (composeUnifier unifier3 unifier2) unifier1
-        , applyUnifier unifier3 resultType
+        , apply unifier3 resultType
         )
 \end{code}
 
@@ -304,15 +329,27 @@ One uses it with an integer argument and the other a boolean.
 This is legal, but it requires that each usage gets a fresh type variable instead of sharing $\alpha$.
 However, we only want to give usages a fresh type variable for the bound type variables.
 This means that we must know which of the type variables in an assumption/environment $\Gamma$ are bound.
+\\\\
+The following test fails from attempting to unify \texttt{Char} and \texttt{Bool} if the function types are not generalized and then used with fresh instantiations.
+
+\inputminted[
+    firstline=191,
+    lastline=217,
+    autogobble=true,
+    highlightlines={205,212},
+    highlightcolor=yellow
+]{haskell}{test/InferenceSpec.hs}
+
+Highlighted in \colorbox{yellow}{yellow} are the multiple usages of \texttt{f} which require fresh instantiations.
 
 \begin{code}
 -- TODO: Handle multiple declarations.
 -- TODO: Handle pattern matching. :sweat_smile:
 infer gamma (LetBinding [BoundFunctionDefinition Nothing name [PatternVariable param] body] letExpr) = do
     (unifier1, bindingType) <- infer gamma (AnonymousFunction [param] body)
-    let gamma' = Map.map (apply unifier1) gamma
+    let gamma' = apply unifier1 gamma
     let scheme = generalize gamma' bindingType
-    let gamma'' = Map.insert (Variable name) scheme gamma'
+    let gamma'' = assign gamma' name scheme
     (unifier2, letBodyType) <- infer gamma'' letExpr
     return (composeUnifier unifier1 unifier2, letBodyType)
 \end{code}
