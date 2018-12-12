@@ -9,10 +9,7 @@ import Text.Megaparsec
 import AST
 import Inference
 import Lib
-
-
-emptyEnvironment :: Environment
-emptyEnvironment = Environment $ Map.empty
+import TestUtility
 
 
 spec :: Spec
@@ -245,33 +242,17 @@ spec = do
                         )
 
         it "handles function application of arity > 1 (right arg)" $
-            let
-                expr = parse expression "" "(\\x y z -> z) True \"hello\" 'a'"
-            in case expr of
-                Right e ->
-                    snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
-                        Type "Char" []
+            parseInfer "(\\x y z -> z) True \"hello\" 'a'" `shouldBe`
+                Type "Char" []
 
         it "handles function application of arity > 1 (middle arg)" $
-            let
-                expr = parse expression "" "(\\x y z -> y) True \"hello\" 'a'"
-            in case expr of
-                Right e ->
-                    snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
-                        Type "String" []
+            parseInfer "(\\x y z -> y) True \"hello\" 'a'" `shouldBe`
+                Type "String" []
 
         it "handles function application of arity > 1 (left arg)" $
-            let
-                expr = parse expression "" "(\\x y z -> x) True \"hello\" 'a'"
-            in case expr of
-                Right e ->
-                    snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
-                        Type "Bool" []
+            parseInfer "(\\x y z -> x) True \"hello\" 'a'" `shouldBe`
+                Type "Bool" []
 
         it "handles a let binding declaration with multiple patterns" $
-            let
-                expr = parse expression "" "let f x y = y in f True 'a'"
-            in case expr of
-                Right e ->
-                    snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
-                        Type "Char" []
+            parseInfer "let f x y = y in f True 'a'" `shouldBe`
+                Type "Char" []

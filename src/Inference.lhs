@@ -343,10 +343,10 @@ This means that we must know which of the type variables in an assumption/enviro
 The following test fails from attempting to unify \texttt{Char} and \texttt{Bool} if the function types are not generalized and then used with fresh instantiations.
 
 \inputminted[
-    firstline=195,
-    lastline=221,
+    firstline=194,
+    lastline=220,
     autogobble=true,
-    highlightlines={209,216},
+    highlightlines={208,215},
     highlightcolor=yellow
 ]{haskell}{test/InferenceSpec.hs}
 
