@@ -122,7 +122,7 @@ spec = do
 
     describe "infer" $ do
         it "infers the identity function" $
-            evalState (infer emptyEnvironment (AnonymousFunction ["x"] (Variable "x"))) 0 `shouldBe`
+            evalState (infer emptyEnvironment (AnonymousFunction [PatternVariable "x"] (Variable "x"))) 0 `shouldBe`
                 ( Map.empty
                 , TypeFunc (TypeArg "t0") (TypeArg "t0")
                 )
@@ -131,7 +131,7 @@ spec = do
             let
                 expr =
                     (FunctionApplication
-                        (AnonymousFunction ["x"] (Variable "x"))
+                        (AnonymousFunction [PatternVariable "x"] (Variable "x"))
                         (Bool True)
                     )
             in
@@ -144,9 +144,9 @@ spec = do
                     (FunctionApplication
                         (FunctionApplication
                             (AnonymousFunction
-                                ["x"]
+                                [PatternVariable "x"]
                                 (AnonymousFunction
-                                    ["y"]
+                                    [PatternVariable "y"]
                                     (Variable "x")
                                 )
                             )
@@ -164,9 +164,9 @@ spec = do
                     (FunctionApplication
                         (FunctionApplication
                             (AnonymousFunction
-                                ["x"]
+                                [PatternVariable "x"]
                                 (AnonymousFunction
-                                    ["y"]
+                                    [PatternVariable "y"]
                                     (Variable "y")
                                 )
                             )
@@ -231,7 +231,7 @@ spec = do
 
         it "handles functions with arity > 1" $
             let
-                expr = AnonymousFunction ["x", "y", "z"] (Bool True)
+                expr = AnonymousFunction (PatternVariable <$> ["x", "y", "z"]) (Bool True)
             in
                 snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
                     TypeFunc

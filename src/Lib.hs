@@ -213,6 +213,13 @@ tupleExpression =
     tuple Tuple expression
 
 
+patternCons :: Parser Pattern
+patternCons = do
+    lhs <- pattern
+    symbol "::"
+    PatternCons lhs <$> pattern
+
+
 function :: Parser Declaration
 function = do
     maybeAnnotation <- optional $ try declarationAnnotation
@@ -233,11 +240,6 @@ function = do
 
         Nothing ->
             funcDef Nothing <$> contextualExpression indentation
-  where
-    patternCons = do
-        lhs <- pattern
-        symbol "::"
-        PatternCons lhs <$> pattern
 
 
 declarationAnnotation :: Parser (String, Type)
@@ -267,7 +269,7 @@ annotationTerm =
 anonymousFunction :: Parser Expression
 anonymousFunction = do
     symbol "\\"
-    parameters <- some $ identifier <|> symbol "_"
+    parameters <- many (try patternCons <|> patternTerm)
     symbol "->"
     AnonymousFunction parameters <$> expression
 

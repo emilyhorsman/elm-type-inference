@@ -284,7 +284,7 @@ infer (Environment gamma) variable@(Variable name) =
 infer gamma (AnonymousFunction [] expr) =
     infer gamma expr
 
-infer gamma (AnonymousFunction [param] expr) = do
+infer gamma (AnonymousFunction [PatternVariable param] expr) = do
     freshTypeVariable <- TypeArg <$> fresh
     let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
     let gamma' = assign gamma param scheme
@@ -355,7 +355,7 @@ Highlighted in \colorbox{yellow}{yellow} are the multiple usages of \texttt{f} w
 \begin{code}
 -- TODO: Handle multiple declarations.
 -- TODO: Handle pattern matching. :sweat_smile:
-infer gamma (LetBinding [BoundFunctionDefinition Nothing name [PatternVariable param] body] letExpr) = do
+infer gamma (LetBinding [BoundFunctionDefinition Nothing name [param] body] letExpr) = do
     (unifier1, bindingType) <- infer gamma (AnonymousFunction [param] body)
     let gamma' = apply unifier1 gamma
     let scheme = generalize gamma' bindingType

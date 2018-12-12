@@ -285,10 +285,17 @@ spec = do
 
     describe "anonymousFunction" $ do
         it "parses an anonymous function expression" $
-            parse anonymousFunction "" "\\a -> 1" `shouldParse` AnonymousFunction ["a"] (Int 1)
+            parse anonymousFunction "" "\\a -> 1" `shouldParse`
+                AnonymousFunction [PatternVariable "a"] (Int 1)
 
         it "parses underscores for parameters" $
-            parse anonymousFunction "" "\\_ a _ -> 1" `shouldParse` AnonymousFunction ["_", "a", "_"] (Int 1)
+            parse anonymousFunction "" "\\_ a _ -> 1" `shouldParse`
+                AnonymousFunction
+                    [ PatternAnything
+                    , PatternVariable "a"
+                    , PatternAnything
+                    ]
+                    (Int 1)
 
     describe "letBinding" $ do
         it "parses a single binding" $
@@ -461,7 +468,7 @@ spec = do
         it "parses anonymous function as lvalue of function application" $
             parse expression "" "(\\x -> x) 1" `shouldParse`
                 FunctionApplication
-                    (AnonymousFunction ["x"] (Variable "x"))
+                    (AnonymousFunction [PatternVariable "x"] (Variable "x"))
                     (Int 1)
 
         it "parses multiline function application" $

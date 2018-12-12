@@ -26,7 +26,7 @@ data Expression
     | Tuple [Expression]
     | If Expression Expression Expression
     | FunctionApplication Expression Expression
-    | AnonymousFunction [String] Expression
+    | AnonymousFunction [Pattern] Expression
     | LetBinding [Declaration] Expression
     | Case Expression [CaseBranch]
     | RecordValue (Map.Map String Expression)
