@@ -8,12 +8,21 @@
 \usepackage[utf8]{inputenc}
 \usepackage[top=1in,bottom=1in,left=1.5in,right=1.5in]{geometry}
 
+\usepackage{fontspec}
+\setmonofont[
+  Contextuals={Alternate}
+]{Fira Code}
+
 \usepackage{minted}
+\setminted{
+    mathescape,
+    curlyquotes=true,
+    fontsize=\footnotesize,
+    breaklines=true
+}
 \newenvironment{code}{\VerbatimEnvironment\begin{minted}[
     linenos,
-    firstnumber=last,
-    mathescape,
-    curlyquotes=true
+    firstnumber=last
     ]{haskell}}{\end{minted}}
 \newenvironment{spec}{\VerbatimEnvironment\begin{minted}{haskell}}{\end{minted}}
 \newcommand{\piercefootnote}[1]{\footnote{Types and Programming Languages, Pierce p. #1}}
