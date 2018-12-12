@@ -267,3 +267,11 @@ spec = do
                 Right e ->
                     snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
                         Type "Bool" []
+
+        it "handles a let binding declaration with multiple patterns" $
+            let
+                expr = parse expression "" "let f x y = y in f True 'a'"
+            in case expr of
+                Right e ->
+                    snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
+                        Type "Char" []

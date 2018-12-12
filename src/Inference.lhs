@@ -355,8 +355,8 @@ Highlighted in \colorbox{yellow}{yellow} are the multiple usages of \texttt{f} w
 \begin{code}
 -- TODO: Handle multiple declarations.
 -- TODO: Handle pattern matching. :sweat_smile:
-infer gamma (LetBinding [BoundFunctionDefinition Nothing name [param] body] letExpr) = do
-    (unifier1, bindingType) <- infer gamma (AnonymousFunction [param] body)
+infer gamma (LetBinding [BoundFunctionDefinition Nothing name patterns body] letExpr) = do
+    (unifier1, bindingType) <- infer gamma (AnonymousFunction patterns body)
     let gamma' = apply unifier1 gamma
     let scheme = generalize gamma' bindingType
     let gamma'' = assign gamma' name scheme
