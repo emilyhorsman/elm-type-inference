@@ -4,9 +4,11 @@ import Control.Exception (evaluate)
 import Control.Monad.State
 import qualified Data.Map.Strict as Map
 import Test.Hspec
+import Text.Megaparsec
 
 import AST
 import Inference
+import Lib
 
 
 emptyEnvironment :: Environment
@@ -219,3 +221,49 @@ spec = do
             in
                 snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
+
+        it "handles nullary functions" $
+            let
+                expr = AnonymousFunction [] (Bool True)
+            in
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                    Type "Bool" []
+
+        it "handles functions with arity > 1" $
+            let
+                expr = AnonymousFunction ["x", "y", "z"] (Bool True)
+            in
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                    TypeFunc
+                        (TypeArg "t0")
+                        (TypeFunc
+                            (TypeArg "t1")
+                            (TypeFunc
+                                (TypeArg "t2")
+                                (Type "Bool" [])
+                            )
+                        )
+
+        it "handles function application of arity > 1 (right arg)" $
+            let
+                expr = parse expression "" "(\\x y z -> z) True \"hello\" 'a'"
+            in case expr of
+                Right e ->
+                    snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
+                        Type "Char" []
+
+        it "handles function application of arity > 1 (middle arg)" $
+            let
+                expr = parse expression "" "(\\x y z -> y) True \"hello\" 'a'"
+            in case expr of
+                Right e ->
+                    snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
+                        Type "String" []
+
+        it "handles function application of arity > 1 (left arg)" $
+            let
+                expr = parse expression "" "(\\x y z -> x) True \"hello\" 'a'"
+            in case expr of
+                Right e ->
+                    snd (evalState (infer emptyEnvironment e) 0) `shouldBe`
+                        Type "Bool" []

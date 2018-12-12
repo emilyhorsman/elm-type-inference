@@ -281,14 +281,21 @@ infer (Environment gamma) variable@(Variable name) =
             t <- instantiate scheme
             return (Map.empty, t)
 
--- TODO: Apply currying for multiple parameters
--- TODO: Handle nullary functions
+infer gamma (AnonymousFunction [] expr) =
+    infer gamma expr
+
 infer gamma (AnonymousFunction [param] expr) = do
     freshTypeVariable <- TypeArg <$> fresh
     let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
     let gamma' = assign gamma param scheme
     (unifier, t) <- infer gamma' expr
     return (unifier, TypeFunc (apply unifier freshTypeVariable) t)
+
+infer gamma (AnonymousFunction (param : params) expr) = do
+    infer gamma $
+        AnonymousFunction
+            [param]
+            (AnonymousFunction params expr)
 \end{code}
 
 Function application is trickier.
