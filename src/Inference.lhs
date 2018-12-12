@@ -255,12 +255,43 @@ generalize gamma t = TypeScheme
 assign :: Environment -> VariableName -> TypeScheme -> Environment
 assign (Environment gamma) param scheme =
     Environment $ Map.insert (Variable param) scheme gamma
+\end{code}
 
+We also need some infrastructure for handling type constructors and their variants (also known as data constructors).
+
+\begin{code}
+type Defs = (Map.Map VariantTag (Variant, TypeConstructorDefinition))
+data Definitions
+    = Definitions Defs
+    deriving (Show, Eq, Ord)
+
+fromVariant :: TypeConstructorDefinition -> Variant -> Defs
+fromVariant def v@(Variant tag _) =
+    Map.singleton tag (v, def)
+
+constructDefinitions :: [TypeConstructorDefinition] -> Definitions
+constructDefinitions [] =
+    Definitions $ Map.empty
+
+constructDefinitions (def@(TypeConstructorDefinition _ args variants) : defs) =
+    let
+        (Definitions map) = constructDefinitions defs
+    in
+        Definitions $ Map.union
+            (Map.unions $ (fromVariant def) <$> variants)
+            map
+\end{code}
+
+Base types are trivial to infer.
+
+\begin{code}
 infer :: Environment -> Expression -> TypeVariablesState (Unifier, Type)
+-- TODO: comparable constrained type variable
 infer _ (Char _) =
     return (Map.empty, Type "Char" [])
 
 -- NOTE: A String is not equivalent to List Char in Elm.
+-- TODO: appendable, compappend constrained type variables
 infer _ (String _) =
     return (Map.empty, Type "String" [])
 
@@ -369,6 +400,7 @@ infer gamma (LetBinding (decl : decls) letExpr) =
 We assume the child type of a \texttt{List} type is inferred from its first member.
 
 \begin{code}
+-- TODO: comparable, compappend, appendable constrained type variables
 infer gamma (List []) = do
     typeArg <- TypeArg <$> fresh
     return (Map.empty, Type "List" [typeArg])
@@ -383,6 +415,15 @@ infer gamma (Tuple children) = do
     pairs <- mapM (infer gamma) children
     let unifier = foldr composeUnifier Map.empty $ fst <$> pairs
     return (unifier, TupleType $ snd <$> pairs)
+\end{code}
+
+A conditional is really just a function with a type signature $\mathbb{B} : \alpha \to \alpha \to \alpha$.
+We're only worried about inference and not type checking.
+This means we can simply infer the type $\alpha$ of one of the branches.
+
+\begin{code}
+infer gamma (If _ trueBranch _) =
+    infer gamma trueBranch
 \end{code}
 
 \end{document}

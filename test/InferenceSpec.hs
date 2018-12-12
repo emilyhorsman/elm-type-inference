@@ -305,3 +305,66 @@ spec = do
                         , Type "String" []
                         , Type "Char" []
                         ]
+
+        it "infers a conditional" $
+            let
+                expr =
+                    If
+                        (Bool True)
+                        (Bool True)
+                        (Bool False)
+            in
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                    Type "Bool" []
+
+        it "infers a data constructor/variant" $
+            let
+                expr =
+                    FunctionApplication
+                        (Constructor "Just")
+                        (Bool True)
+            in
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                    Type "Maybe" [Type "Bool" []]
+
+    describe "constructDefinitions" $
+        it "constructs a correct map" $
+            let
+                nothing =
+                    Variant "Nothing" []
+
+                just =
+                    Variant "Just" [TypeArg "a"]
+
+                maybeDef =
+                    TypeConstructorDefinition
+                        "Maybe"
+                        [TypeConstructorArg "a"]
+                        [nothing, just]
+
+                left =
+                    Variant "Left" [TypeArg "a"]
+
+                right =
+                    Variant "Right" [TypeArg "b"]
+
+                eitherDef =
+                    TypeConstructorDefinition
+                        "Either"
+                        [TypeConstructorArg "a", TypeConstructorArg "b"]
+                        [left, right]
+
+                definitions :: [TypeConstructorDefinition]
+                definitions =
+                    [ maybeDef
+                    , eitherDef
+                    ]
+            in
+                constructDefinitions definitions `shouldBe`
+                    Definitions
+                        (Map.fromList
+                            [ ("Nothing", (nothing, maybeDef))
+                            , ("Just", (just, maybeDef))
+                            , ("Left", (left, eitherDef))
+                            , ("Right", (right, eitherDef))
+                            ])
