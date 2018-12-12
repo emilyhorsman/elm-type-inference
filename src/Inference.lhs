@@ -284,6 +284,7 @@ infer (Environment gamma) variable@(Variable name) =
 infer gamma (AnonymousFunction [] expr) =
     infer gamma expr
 
+-- TODO: Handle pattern matching. :sweat_smile:
 infer gamma (AnonymousFunction [PatternVariable param] expr) = do
     freshTypeVariable <- TypeArg <$> fresh
     let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
@@ -353,8 +354,6 @@ The following test fails from attempting to unify \texttt{Char} and \texttt{Bool
 Highlighted in \colorbox{yellow}{yellow} are the multiple usages of \texttt{f} which require fresh instantiations.
 
 \begin{code}
--- TODO: Handle multiple declarations.
--- TODO: Handle pattern matching. :sweat_smile:
 infer gamma (LetBinding [BoundFunctionDefinition Nothing name patterns body] letExpr) = do
     (unifier1, bindingType) <- infer gamma (AnonymousFunction patterns body)
     let gamma' = apply unifier1 gamma
@@ -362,6 +361,9 @@ infer gamma (LetBinding [BoundFunctionDefinition Nothing name patterns body] let
     let gamma'' = assign gamma' name scheme
     (unifier2, letBodyType) <- infer gamma'' letExpr
     return (composeUnifier unifier1 unifier2, letBodyType)
+
+infer gamma (LetBinding (decl : decls) letExpr) =
+    infer gamma $ LetBinding [decl] (LetBinding decls letExpr)
 \end{code}
 
 \end{document}

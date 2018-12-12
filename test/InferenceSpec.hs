@@ -256,3 +256,28 @@ spec = do
         it "handles a let binding declaration with multiple patterns" $
             parseInfer "let f x y = y in f True 'a'" `shouldBe`
                 Type "Char" []
+
+        it "handles multiple declarations in a let binding" $
+            let
+                f =
+                    BoundFunctionDefinition
+                        Nothing
+                        "f"
+                        [PatternVariable "x"]
+                        (Variable "x")
+
+                g =
+                    BoundFunctionDefinition
+                        Nothing
+                        "g"
+                        [PatternVariable "y"]
+                        (FunctionApplication (Variable "f") (Char 'a'))
+
+                expr =
+                    (LetBinding
+                        [f, g]
+                        (FunctionApplication (Variable "f") (Bool True))
+                    )
+            in
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                    Type "Bool" []
