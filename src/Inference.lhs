@@ -366,4 +366,23 @@ infer gamma (LetBinding (decl : decls) letExpr) =
     infer gamma $ LetBinding [decl] (LetBinding decls letExpr)
 \end{code}
 
+We assume the child type of a \texttt{List} type is inferred from its first member.
+
+\begin{code}
+infer gamma (List []) = do
+    typeArg <- TypeArg <$> fresh
+    return (Map.empty, Type "List" [typeArg])
+
+infer gamma (List (car : cdr)) = do
+    (unifier, childType) <- infer gamma car
+    return (unifier, Type "List" [childType])
+\end{code}
+
+\begin{code}
+infer gamma (Tuple children) = do
+    pairs <- mapM (infer gamma) children
+    let unifier = foldr composeUnifier Map.empty $ fst <$> pairs
+    return (unifier, TupleType $ snd <$> pairs)
+\end{code}
+
 \end{document}

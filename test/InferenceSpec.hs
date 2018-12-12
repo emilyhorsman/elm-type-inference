@@ -281,3 +281,27 @@ spec = do
             in
                 snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
                     Type "Bool" []
+
+        it "infers an empty list" $
+            snd (evalState (infer emptyEnvironment (List [])) 0) `shouldBe`
+                Type "List" [TypeArg "t0"]
+
+        it "infers a list" $
+            snd (evalState (infer emptyEnvironment (List [Bool True, Bool False])) 0) `shouldBe`
+                Type "List" [Type "Bool" []]
+
+        it "infers a tuple" $
+            let
+                expr =
+                    Tuple
+                        [ Bool True
+                        , String "hello"
+                        , Char 'a'
+                        ]
+            in
+                snd (evalState (infer emptyEnvironment expr) 0) `shouldBe`
+                    TupleType
+                        [ Type "Bool" []
+                        , Type "String" []
+                        , Type "Char" []
+                        ]
