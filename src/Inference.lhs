@@ -86,6 +86,9 @@ instance Typing Type where
     apply unifier (TypeFunc a b) =
         TypeFunc (apply unifier a) (apply unifier b)
 
+    apply unifier (TupleType types) =
+        TupleType $ apply unifier <$> types
+
     -- TODO
     apply _ _ =
         error "Not yet implemented!"
@@ -97,6 +100,9 @@ instance Typing Type where
         Set.union (freeVariables left) (freeVariables right)
 
     freeVariables (Type _ types) =
+        Set.unions $ freeVariables <$> types
+
+    freeVariables (TupleType types) =
         Set.unions $ freeVariables <$> types
 
     -- TODO
@@ -312,7 +318,7 @@ constructorType _ resultType [] =
 constructorType typeVarMap resultType (TypeArg var : args) =
     case Map.lookup var typeVarMap of
         Nothing ->
-            Error
+            error $ "Type argument `" ++ var ++ "` used in variant is not in type constructor."
 
         Just t ->
             TypeFunc t (constructorType typeVarMap resultType args)
