@@ -323,6 +323,23 @@ constructorType :: Map.Map String Type -> Type -> [Type] -> Type
 constructorType _ resultType [] =
     resultType
 
+constructorType typeVarMap resultType (Type tag children : args) =
+    TypeFunc
+        -- Variants can't be defined with a partial application of a type
+        -- constructor so we don't want to produce a tree of TypeFunc instances
+        -- here, we only want to map the usages of the type constructor
+        -- arguments found in the variants.
+        -- i.e., This is illegal since Either isn't fully applied:
+        --     type Foo a = Bar (Either a)
+        --
+        -- The following requires deeply replacing the type constructor
+        -- arguments `a` and `b` with their instantiations $t_i$ and $t_j$.
+        --     type Foo a b = Bar (Either (Maybe a) (Maybe b))
+        --
+        -- Also using `apply` here is totally abusing the Unifier instance, lol.
+        (Type tag $ apply typeVarMap <$> children)
+        (constructorType typeVarMap resultType args)
+
 -- TODO: We need to handle other types here.
 constructorType typeVarMap resultType (TypeArg var : args) =
     case Map.lookup var typeVarMap of
@@ -333,6 +350,12 @@ constructorType typeVarMap resultType (TypeArg var : args) =
             TypeFunc t (constructorType typeVarMap resultType args)
 
 instantiateConstructor :: (Variant, TypeConstructorDefinition) -> TypeVariablesState Type
+\end{code}
+
+The variants in the type constructor definition don't matter, we are only instantiating fresh type variables for the type parameters of the type constructor, e.g., in \texttt{type Either a b} we have $[\texttt{a} \mapsto t_i, \texttt{b} \mapsto t_j]$.
+This is being inferred from a given variant.
+
+\begin{code}
 instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName args _) = do
     freshTypeVariableNames <- mapM (const fresh) args
     let freshTypeVariables = TypeArg <$> freshTypeVariableNames
@@ -343,7 +366,7 @@ instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName ar
     return $ constructorType typeVarMap resultType types
 \end{code}
 
-Base types are trivial to infer.
+Pattern inference requires some plumbing functions.
 
 \begin{code}
 inferPattern :: Pattern -> TypeVariablesState Type
@@ -359,7 +382,11 @@ inferPattern pattern =
             PatternBool _ -> "Bool"
     in
         return $ Type constructor []
+\end{code}
 
+Base types are trivial to infer.
+
+\begin{code}
 infer :: Definitions -> Environment -> Expression -> TypeVariablesState (Unifier, Type)
 -- TODO: comparable constrained type variable
 infer _ _ (Char _) =
@@ -396,7 +423,12 @@ infer defs gamma (AnonymousFunction [PatternVariable param] expr) = do
     let gamma' = assign gamma param scheme
     (unifier, t) <- infer defs gamma' expr
     return (unifier, TypeFunc (apply unifier freshTypeVariable) t)
+\end{code}
 
+We need to correct infer \texttt{f (Just 'a') = True} as $\texttt{Maybe Char} \to \texttt{Bool}$.
+We'll need the same mechanism here when inferring \texttt{case} expressions.
+
+\begin{code}
 infer defs@(Definitions defsMap) gamma (AnonymousFunction [PatternConstructor tag patterns] expr) =
     case Map.lookup tag defsMap of
         Nothing ->

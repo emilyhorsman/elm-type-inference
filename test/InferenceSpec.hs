@@ -373,6 +373,22 @@ spec = do
                 snd (evalState (infer definitions emptyEnvironment expr) 0) `shouldBe`
                     TypeFunc (Type "Bar" []) (Type "Char" [])
 
+        it "infers a complex constructor pattern" $
+            -- f : Either (Maybe a) b -> a
+            -- f (Left (Just a)) = a
+            let
+                expr =
+                    AnonymousFunction
+                        [PatternConstructor "Left"
+                            [PatternConstructor "Just" [PatternVariable "a"]]
+                        ]
+                        (Variable "a")
+            in
+                snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
+                    TypeFunc
+                        (Type "Either" [Type "Maybe" [TypeArg "t0"], TypeArg "t1"])
+                        (TypeArg "t0")
+
         it "infers a record value" $
             parseInfer "{ x = 'a', y = True }" `shouldBe`
                 RecordType (Map.fromList
@@ -401,3 +417,43 @@ spec = do
                         , ("Left", (left, eitherDef))
                         , ("Right", (right, eitherDef))
                         ])
+
+    describe "constructorType" $ do
+        it "handles simple constructor" $
+            let
+                typeVarMap =
+                    Map.singleton "a" (TypeArg "t0")
+
+                resultType =
+                    Type "Foo" [TypeArg "t0"]
+
+                variantParameters =
+                    [ TypeArg "a" ]
+            in
+                constructorType typeVarMap resultType variantParameters `shouldBe`
+                    TypeFunc (TypeArg "t0") resultType
+
+        it "handles nested data constructor" $
+            let
+                typeVarMap =
+                    Map.fromList
+                        [ ("a", TypeArg "t0")
+                        , ("b", TypeArg "t1")
+                        ]
+
+                resultType =
+                    Type "Foo" [TypeArg "t0", TypeArg "t1"]
+
+                -- type Foo a b = Bar (Either (Maybe a) Bool) (Maybe b)
+                variantParameters =
+                    [ Type "Either" [Type "Maybe" [TypeArg "a"], Type "Bool" []]
+                    , Type "Maybe" [TypeArg "b"]
+                    ]
+            in
+                constructorType typeVarMap resultType variantParameters `shouldBe`
+                    TypeFunc
+                        (Type "Either" [Type "Maybe" [TypeArg "t0"], Type "Bool" []])
+                        (TypeFunc
+                            (Type "Maybe" [TypeArg "t1"])
+                            resultType
+                        )
