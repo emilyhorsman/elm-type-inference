@@ -370,11 +370,11 @@ instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName ty
 Pattern inference requires some plumbing functions.
 
 \begin{code}
-inferPattern :: Environment -> Pattern -> TypeVariablesState (Environment, Type)
-inferPattern gamma PatternAnything =
+inferPattern :: Definitions -> Environment -> Pattern -> TypeVariablesState (Environment, Type)
+inferPattern _ gamma PatternAnything =
     (gamma,) <$> TypeArg <$> fresh
 
-inferPattern gamma@(Environment envMap) (PatternVariable param) =
+inferPattern _ gamma@(Environment envMap) (PatternVariable param) =
     -- See "does not re-instantiate type arguments with prior usage" in
     -- InferenceSpec for a test that would fail if we did not check the
     -- environment before instantiating.
@@ -389,15 +389,24 @@ inferPattern gamma@(Environment envMap) (PatternVariable param) =
         Just (TypeScheme {body}) ->
             return (gamma, body)
 
-inferPattern gamma (PatternTuple patterns) =
+inferPattern defs gamma (PatternTuple patterns) =
     let
         f :: (Environment, [Type]) -> Pattern -> TypeVariablesState (Environment, [Type])
         f (gamma', childrenTypes) pattern =
-            second (flip (:) childrenTypes) <$> inferPattern gamma' pattern
+            second (flip (:) childrenTypes) <$> inferPattern defs gamma' pattern
     in
         second (TupleType . reverse) <$> foldM f (gamma, []) patterns
 
-inferPattern gamma pattern =
+inferPattern defs@(Definitions defsMap) gamma (PatternConstructor tag patterns) =
+    case Map.lookup tag defsMap of
+        Nothing ->
+            error $ "`" ++ tag ++ "` is not in definitions."
+
+        Just pair -> do
+            constructorType <- instantiateConstructor pair
+            return (gamma, constructorType)
+
+inferPattern _ gamma pattern =
     let
         constructor = case pattern of
             PatternString _ -> "String"
@@ -447,19 +456,8 @@ We need to correct infer \texttt{f (Just 'a') = True} as $\texttt{Maybe Char} \t
 We'll need the same mechanism here when inferring \texttt{case} expressions.
 
 \begin{code}
-infer defs@(Definitions defsMap) gamma (AnonymousFunction [PatternConstructor tag patterns] expr) =
-    case Map.lookup tag defsMap of
-        Nothing ->
-            error $ "`" ++ tag ++ "` is not in definitions."
-
-        Just pair -> do
-            constructorType <- instantiateConstructor pair
-            (unifier, exprType) <- infer defs gamma expr
-            -- TODO: patterns should unify with constructorType
-            return (Map.empty, TypeFunc constructorType exprType)
-
 infer defs gamma (AnonymousFunction [pattern] expr) = do
-    (gamma', patternType) <- inferPattern gamma pattern
+    (gamma', patternType) <- inferPattern defs gamma pattern
     (unifier, exprType) <- infer defs gamma' expr
     return
         ( unifier
