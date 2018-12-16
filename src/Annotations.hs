@@ -1,13 +1,17 @@
 module Annotations where
 
-import Text.Megaparsec
+import Control.Arrow
+import qualified Data.Map.Strict as Map
 import Data.Maybe
+import Text.Megaparsec
 
 import AST
 import Lib
 import qualified Elm.Basics as Basics
 
 
-basicAnnotations :: [(String, Type)]
+basicAnnotations :: Map.Map Expression Type
 basicAnnotations =
-    catMaybes $ map (parseMaybe declarationAnnotation) Basics.source
+    Map.fromList $
+        map (first Variable) $ catMaybes $
+            map (parseMaybe declarationAnnotation) Basics.source

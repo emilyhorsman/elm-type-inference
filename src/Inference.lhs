@@ -43,6 +43,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
 import AST
+import Annotations
 \end{code}
 }
 
@@ -455,6 +456,10 @@ inferPattern _ gamma pattern =
 Base types are trivial to infer.
 
 \begin{code}
+elmPrelude :: Map.Map Expression TypeScheme
+elmPrelude =
+    Map.map (generalize (Environment Map.empty)) basicAnnotations
+
 infer :: Definitions -> Environment -> Expression -> TypeVariablesState (Unifier, Type)
 -- TODO: comparable constrained type variable
 infer _ _ (Char _) =
@@ -474,7 +479,7 @@ See Step 5 in Pierce\piercefootnote{334}.
 
 \begin{code}
 infer _ (Environment gamma) variable@(Variable name) =
-    case Map.lookup variable gamma of
+    case Map.lookup variable (Map.union elmPrelude gamma) of
         Nothing ->
             error $ name ++ " is unbound."
 
