@@ -19,16 +19,17 @@
     mathescape,
     curlyquotes=true,
     fontsize=\footnotesize,
-    breaklines=true
-}
-\newenvironment{code}{\VerbatimEnvironment\begin{minted}[
-    linenos,
+    breaklines=true,
+    linenos=true,
     firstnumber=last
-    ]{haskell}}{\end{minted}}
+}
+\newenvironment{code}{\VerbatimEnvironment\begin{minted}{haskell}}{\end{minted}}
 \newenvironment{spec}{\VerbatimEnvironment\begin{minted}{haskell}}{\end{minted}}
 \newcommand{\piercefootnote}[1]{\footnote{Types and Programming Languages, Pierce p. #1}}
 
 \begin{document}
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
 
 \ignore{
 \begin{code}
@@ -209,7 +210,7 @@ See the \texttt{InferenceSpec} test suite for more.
 $$\sigma(\alpha \to \texttt{Char}) = \sigma(\texttt{List}\, \beta \to \beta)$$
 $$\sigma = [\alpha \mapsto \texttt{List Char}, \beta \mapsto \texttt{Char}]$$
 
-\begin{minted}[escapeinside=||]{haskell}
+\begin{minted}[escapeinside=||,bgcolor=bg]{haskell}
 |$\lambda$|> let s = TypeArg "a" `TypeFunc` Type "Char" []
 |$\lambda$|> let t = Type "List" [TypeArg "b"] `TypeFunc` TypeArg "b"
 |$\lambda$|> s `unify` t
@@ -307,7 +308,7 @@ constructDefinitions (def@(TypeConstructorDefinition _ args variants) : defs) =
 
 Take the following Elm custom type.
 
-\begin{minted}{elm}
+\begin{minted}[bgcolor=bg]{elm}
 type Maybe a = Nothing | Just a
 \end{minted}
 
@@ -474,9 +475,9 @@ infer defs gamma (FunctionApplication expr1 expr2) = do
 
 Let-polymorphism time!
 Pierce describes a caveat we must solve in the inference algorithm.
-Examine the following code:
+Examine the following example code:
 
-\begin{minted}{haskell}
+\begin{minted}[bgcolor=bg]{elm}
 let
     id x = x
 in
@@ -493,17 +494,7 @@ This is legal, but it requires that each usage gets a fresh type variable instea
 However, we only want to give usages a fresh type variable for the bound type variables.
 This means that we must know which of the type variables in an assumption/environment $\Gamma$ are bound.
 \\\\
-The following test fails from attempting to unify \texttt{Char} and \texttt{Bool} if the function types are not generalized and then used with fresh instantiations.
-
-\inputminted[
-    firstline=194,
-    lastline=220,
-    autogobble=true,
-    highlightlines={208,215},
-    highlightcolor=yellow
-]{haskell}{test/InferenceSpec.hs}
-
-Highlighted in \colorbox{yellow}{yellow} are the multiple usages of \texttt{f} which require fresh instantiations.
+See the ``handles let polymorphism'' test in \texttt{InferenceSpec} for an example of a unification between \texttt{Char} and \texttt{Bool} which would fail if the function types were not generalized and then used with fresh instantiations.
 
 \begin{code}
 infer defs gamma (LetBinding [BoundFunctionDefinition Nothing name patterns body] letExpr) = do
