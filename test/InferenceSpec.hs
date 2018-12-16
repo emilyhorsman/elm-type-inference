@@ -373,6 +373,34 @@ spec = do
                 snd (evalState (infer definitions emptyEnvironment expr) 0) `shouldBe`
                     TypeFunc (Type "Bar" []) (Type "Char" [])
 
+        it "infers a flat tuple pattern" $
+            -- f : (a, b, c) -> (a, b)
+            -- f (a, b, _) = (a, b)
+            let
+                expr =
+                    AnonymousFunction
+                        [PatternTuple
+                            [ PatternVariable "a"
+                            , PatternVariable "b"
+                            , PatternAnything
+                            ]
+                        ]
+                        (Tuple [Variable "a", Variable "b"])
+            in
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
+                    TypeFunc
+                        (TupleType
+                            [ TypeArg "t0"
+                            , TypeArg "t1"
+                            , TypeArg "t2"
+                            ]
+                        )
+                        (TupleType
+                            [ TypeArg "t0"
+                            , TypeArg "t1"
+                            ]
+                        )
+
         it "infers a complex constructor pattern" $
             -- f : Either (Maybe a) b -> a
             -- f (Left (Just a)) = a

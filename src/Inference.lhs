@@ -357,12 +357,12 @@ The variants in the type constructor definition don't matter, we are only instan
 This is being inferred from a given variant.
 
 \begin{code}
-instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName args _) = do
-    freshTypeVariableNames <- mapM (const fresh) args
+instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName typeArgs _) = do
+    freshTypeVariableNames <- mapM (const fresh) typeArgs
     let freshTypeVariables = TypeArg <$> freshTypeVariableNames
     let resultType = Type typeName freshTypeVariables
     let typeVarMap = Map.fromList $ zip
-            (map (\(TypeConstructorArg a) -> a) args)
+            (map (\(TypeConstructorArg a) -> a) typeArgs)
             freshTypeVariables
     return $ constructorType typeVarMap resultType types
 \end{code}
@@ -370,10 +370,17 @@ instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName ar
 Pattern inference requires some plumbing functions.
 
 \begin{code}
-inferPattern :: Pattern -> TypeVariablesState Type
-inferPattern PatternAnything =
-    TypeArg <$> fresh
-inferPattern pattern =
+inferPattern :: Environment -> Pattern -> TypeVariablesState (Environment, Type)
+inferPattern gamma PatternAnything =
+    (gamma,) <$> TypeArg <$> fresh
+
+inferPattern gamma (PatternVariable param) = do
+    freshTypeVariable <- TypeArg <$> fresh
+    let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
+    let gamma' = assign gamma param scheme
+    return (gamma', freshTypeVariable)
+
+inferPattern gamma pattern =
     let
         constructor = case pattern of
             PatternString _ -> "String"
@@ -382,7 +389,7 @@ inferPattern pattern =
             PatternFloat _ -> "Float"
             PatternBool _ -> "Bool"
     in
-        return $ Type constructor []
+        return $ (gamma, Type constructor [])
 \end{code}
 
 Base types are trivial to infer.
@@ -417,13 +424,6 @@ infer _ (Environment gamma) variable@(Variable name) =
 
 infer defs gamma (AnonymousFunction [] expr) =
     infer defs gamma expr
-
-infer defs gamma (AnonymousFunction [PatternVariable param] expr) = do
-    freshTypeVariable <- TypeArg <$> fresh
-    let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
-    let gamma' = assign gamma param scheme
-    (unifier, t) <- infer defs gamma' expr
-    return (unifier, TypeFunc (apply unifier freshTypeVariable) t)
 \end{code}
 
 We need to correct infer \texttt{f (Just 'a') = True} as $\texttt{Maybe Char} \to \texttt{Bool}$.
@@ -442,8 +442,12 @@ infer defs@(Definitions defsMap) gamma (AnonymousFunction [PatternConstructor ta
             return (Map.empty, TypeFunc constructorType exprType)
 
 infer defs gamma (AnonymousFunction [pattern] expr) = do
-    t <- inferPattern pattern
-    second (TypeFunc t) <$> infer defs gamma expr
+    (gamma', patternType) <- inferPattern gamma pattern
+    (unifier, exprType) <- infer defs gamma' expr
+    return
+        ( unifier
+        , TypeFunc (apply unifier patternType) exprType
+        )
 
 infer defs gamma (AnonymousFunction (param : params) expr) = do
     infer defs gamma $
