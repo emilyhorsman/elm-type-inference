@@ -343,6 +343,21 @@ spec = do
                 snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Maybe" [Type "Bool" []]
 
+        it "infers a record value" $
+            parseInfer "{ x = 'a', y = True }" `shouldBe`
+                RecordType (Map.fromList
+                    [ ("x", Type "Char" [])
+                    , ("y", Type "Bool" [])
+                    ])
+
+        it "infers a record update" $
+            parseInfer "let foo = { x = 'a', y = True } in { foo | y = False }" `shouldBe`
+                RecordType (Map.fromList
+                    [ ("x", Type "Char" [])
+                    , ("y", Type "Bool" [])
+                    ])
+
+
     describe "constructDefinitions" $
         it "constructs a correct map" $
             standardDefinitions `shouldBe`

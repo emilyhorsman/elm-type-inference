@@ -90,6 +90,9 @@ instance Typing Type where
     apply unifier (TupleType types) =
         TupleType $ apply unifier <$> types
 
+    apply unifier (RecordType typeMap) =
+        RecordType $ apply unifier <$> typeMap
+
     -- TODO
     apply _ _ =
         error "Not yet implemented!"
@@ -105,6 +108,9 @@ instance Typing Type where
 
     freeVariables (TupleType types) =
         Set.unions $ freeVariables <$> types
+
+    freeVariables (RecordType typeMap) =
+        Set.unions $ freeVariables <$> typeMap
 
     -- TODO
     freeVariables _ =
@@ -491,6 +497,20 @@ infer (Definitions defs) gamma (Constructor tag) =
         Just pair -> do
             t <- instantiateConstructor pair
             return (Map.empty, t)
+\end{code}
+
+Record types are similar to tuples.
+There is no support for row polymorphism with records yet.
+
+\begin{code}
+infer defs gamma (RecordValue map) = do
+    typeMap <- mapM (infer defs gamma) map
+    let unifier = foldr (composeUnifier . fst) mempty typeMap
+    return (unifier, RecordType $ Map.map snd typeMap)
+
+infer defs gamma (RecordUpdate name _) =
+    -- TODO: Could the updated value refine the type?
+    infer defs gamma (Variable name)
 \end{code}
 
 \subsection{Resources}
