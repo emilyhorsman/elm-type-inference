@@ -590,7 +590,7 @@ infer defs gamma (RecordUpdate name _) =
     infer defs gamma (Variable name)
 \end{code}
 
-\subsection{Resources}
+\section{Resources}
 
 \begin{enumerate}
     \item \url{https://cseweb.ucsd.edu/classes/wi14/cse230-a/lectures/lec-inference.html}
