@@ -36,6 +36,7 @@
 {-# LANGUAGE TupleSections #-}
 module Inference where
 
+import Control.Arrow
 import Control.Monad.State
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -344,6 +345,20 @@ instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName ar
 Base types are trivial to infer.
 
 \begin{code}
+inferPattern :: Pattern -> TypeVariablesState Type
+inferPattern PatternAnything =
+    TypeArg <$> fresh
+inferPattern pattern =
+    let
+        constructor = case pattern of
+            PatternString _ -> "String"
+            PatternChar _ -> "Char"
+            PatternInt _ -> "Int"
+            PatternFloat _ -> "Float"
+            PatternBool _ -> "Bool"
+    in
+        return $ Type constructor []
+
 infer :: Definitions -> Environment -> Expression -> TypeVariablesState (Unifier, Type)
 -- TODO: comparable constrained type variable
 infer _ _ (Char _) =
@@ -374,13 +389,16 @@ infer _ (Environment gamma) variable@(Variable name) =
 infer defs gamma (AnonymousFunction [] expr) =
     infer defs gamma expr
 
--- TODO: Handle pattern matching. :sweat_smile:
 infer defs gamma (AnonymousFunction [PatternVariable param] expr) = do
     freshTypeVariable <- TypeArg <$> fresh
     let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
     let gamma' = assign gamma param scheme
     (unifier, t) <- infer defs gamma' expr
     return (unifier, TypeFunc (apply unifier freshTypeVariable) t)
+
+infer defs gamma (AnonymousFunction [pattern] expr) = do
+    t <- inferPattern pattern
+    second (TypeFunc t) <$> infer defs gamma expr
 
 infer defs gamma (AnonymousFunction (param : params) expr) = do
     infer defs gamma $

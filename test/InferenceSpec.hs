@@ -124,6 +124,18 @@ spec = do
                 , TypeFunc (TypeArg "t0") (TypeArg "t0")
                 )
 
+        it "infers an anything pattern parameter" $
+            parseInfer "(\\_ -> 'a')" `shouldBe`
+                TypeFunc (TypeArg "t0") (Type "Char" [])
+
+        it "infers a string pattern parameter" $
+            parseInfer "(\\\"hello\" -> 'a')" `shouldBe`
+                TypeFunc (Type "String" []) (Type "Char" [])
+
+        it "infers a bool pattern parameter" $
+            parseInfer "(\\True -> 'a')" `shouldBe`
+                TypeFunc (Type "Bool" []) (Type "Char" [])
+
         it "infers function application" $
             let
                 expr =
