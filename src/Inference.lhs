@@ -382,7 +382,7 @@ resolveApplication (TypeFunc left right) callType =
         (unifier, apply unifier right)
 \end{code}
 
-\texttt{resolvePatterns} takes a partially applied constructor type and a list of patterns
+\texttt{resolvePatterns} takes a partially applied data constructor type and a list of patterns and essentially `calls' the data constructor at the type level.
 
 \begin{code}
 resolvePatterns :: Definitions -> (Environment, Unifier, Type) -> [Pattern] -> TypeVariablesState (Environment, Unifier, Type)
