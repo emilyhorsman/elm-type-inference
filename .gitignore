@@ -6,3 +6,4 @@ elm-type-inference.cabal
 *.pdf
 _minted-*
 grammar
+vendor
