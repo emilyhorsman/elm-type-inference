@@ -349,14 +349,13 @@ constructorType typeVarMap resultType (TypeArg var : args) =
 
         Just t ->
             TypeFunc t (constructorType typeVarMap resultType args)
-
-instantiateConstructor :: (Variant, TypeConstructorDefinition) -> TypeVariablesState Type
 \end{code}
 
 The variants in the type constructor definition don't matter, we are only instantiating fresh type variables for the type parameters of the type constructor, e.g., in \texttt{type Either a b} we have $[\texttt{a} \mapsto t_i, \texttt{b} \mapsto t_j]$.
 This is being inferred from a given variant.
 
 \begin{code}
+instantiateConstructor :: (Variant, TypeConstructorDefinition) -> TypeVariablesState Type
 instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName typeArgs _) = do
     freshTypeVariableNames <- mapM (const fresh) typeArgs
     let freshTypeVariables = TypeArg <$> freshTypeVariableNames
@@ -368,8 +367,34 @@ instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName ty
 \end{code}
 
 Pattern inference requires some plumbing functions.
+Say we are inferring \mintinline{elm}{f (Just a) = a}.
+\texttt{Just} will give us type $t_0 \to \texttt{Maybe}\,t_0$.
+\texttt{a} will give us $t_1$ with the environment updated to include $[\texttt{a} \mapsto t_1]$.
+We want to apply the type of \texttt{a} to the first parameter of \texttt{Just} so that the type of the pattern \texttt{Just a} is actually $\texttt{Maybe}\,t_0$.
 
 \begin{code}
+resolveApplication :: Type -> Type -> (Unifier, Type)
+-- resolveApplication (TypeFunc $t_0$ (Maybe $t_0$)) (TypeArg $t_1$) = ($[t_1 \mapsto t_0]$, Maybe $t_0$)
+resolveApplication (TypeFunc left right) callType =
+    let
+        unifier = unify callType left
+    in
+        (unifier, apply unifier right)
+\end{code}
+
+\texttt{resolvePatterns} takes a partially applied constructor type and a list of patterns
+
+\begin{code}
+resolvePatterns :: Definitions -> (Environment, Unifier, Type) -> [Pattern] -> TypeVariablesState (Environment, Unifier, Type)
+resolvePatterns _ triple [] =
+    return triple
+
+resolvePatterns defs (gamma, unifier, partialConstructorType) (pattern : patterns) = do
+    (gamma', patternType) <- inferPattern defs gamma pattern
+    let (unifier', t) = resolveApplication partialConstructorType patternType
+    let u = composeUnifier unifier unifier'
+    resolvePatterns defs (apply u gamma', u, t) patterns
+
 inferPattern :: Definitions -> Environment -> Pattern -> TypeVariablesState (Environment, Type)
 inferPattern _ gamma PatternAnything =
     (gamma,) <$> TypeArg <$> fresh
@@ -396,15 +421,24 @@ inferPattern defs gamma (PatternTuple patterns) =
             second (flip (:) childrenTypes) <$> inferPattern defs gamma' pattern
     in
         second (TupleType . reverse) <$> foldM f (gamma, []) patterns
+\end{code}
 
-inferPattern defs@(Definitions defsMap) gamma (PatternConstructor tag patterns) =
+Inferring a constructor involves inferring the type of the variant (data constructor) and then applying its pattern arguments to it.
+See "infers a complex constructor pattern with multiple pattern arguments" in \texttt{InferenceSpec}.
+
+\begin{code}
+inferPattern defs@(Definitions defsMap) gamma (PatternConstructor tag []) =
     case Map.lookup tag defsMap of
         Nothing ->
             error $ "`" ++ tag ++ "` is not in definitions."
 
-        Just pair -> do
-            constructorType <- instantiateConstructor pair
-            return (gamma, constructorType)
+        Just pair ->
+            (gamma,) <$> instantiateConstructor pair
+
+inferPattern defs@(Definitions defsMap) gamma (PatternConstructor tag patterns) = do
+    (gamma', constructorType) <- inferPattern defs gamma (PatternConstructor tag [])
+    (gamma'', unifier, t) <- resolvePatterns defs (gamma', Map.empty, constructorType) patterns
+    return (gamma'', t)
 
 inferPattern _ gamma pattern =
     let

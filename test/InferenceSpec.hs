@@ -355,7 +355,7 @@ spec = do
                 snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Maybe" [Type "Bool" []]
 
-        it "infers a very simple constructor pattern" $
+        it "infers a simple constructor pattern without type arguments" $
             let
                 definitions =
                     constructDefinitions
@@ -428,6 +428,21 @@ spec = do
                             ]
                         )
 
+        it "infers a non-nested constructor pattern" $
+            -- f : Maybe a -> a
+            -- f (Just a) = a
+            let
+                expr =
+                    AnonymousFunction
+                        [PatternConstructor "Just" [PatternVariable "a"]]
+                        (Variable "a")
+            in
+                snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
+                    TypeFunc
+                        (Type "Maybe" [TypeArg "t0"])
+                        (TypeArg "t0")
+
+
         it "infers a complex constructor pattern" $
             -- f : Either (Maybe a) b -> a
             -- f (Left (Just a)) = a
@@ -441,8 +456,38 @@ spec = do
             in
                 snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
                     TypeFunc
-                        (Type "Either" [Type "Maybe" [TypeArg "t0"], TypeArg "t1"])
-                        (TypeArg "t0")
+                        (Type "Either" [Type "Maybe" [TypeArg "t2"], TypeArg "t1"])
+                        (TypeArg "t2")
+
+        it "infers a complex constructor pattern with multiple pattern arguments" $
+            -- f : State (Maybe a) (Maybe b) -> (b, a)
+            -- f (State (Just a) (Just b)) = (b, a)
+            let
+                expr =
+                    AnonymousFunction
+                        [PatternConstructor "State"
+                            [ PatternConstructor "Just" [PatternVariable "a"]
+                            , PatternConstructor "Just" [PatternVariable "b"]
+                            ]
+                        ]
+                        (Tuple [Variable "b", Variable "a"])
+
+                definitions =
+                    constructDefinitions
+                        [ maybeDef
+                        , TypeConstructorDefinition
+                            "State"
+                            [TypeConstructorArg "a", TypeConstructorArg "b"]
+                            [Variant "State" [TypeArg "a", TypeArg "b"]]
+                        ]
+            in
+                snd (evalState (infer definitions emptyEnvironment expr) 0) `shouldBe`
+                    TypeFunc
+                        (Type
+                            "State"
+                            [Type "Maybe" [TypeArg "t2"], Type "Maybe" [TypeArg "t4"]]
+                        )
+                        (TupleType [TypeArg "t4", TypeArg "t2"])
 
         it "infers a record value" $
             parseInfer "{ x = 'a', y = True }" `shouldBe`
