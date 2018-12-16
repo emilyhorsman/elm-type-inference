@@ -7,6 +7,7 @@
 \usepackage{amssymb}
 \usepackage[utf8]{inputenc}
 \usepackage[top=1in,bottom=1in,left=1.5in,right=1.5in]{geometry}
+\usepackage{url}
 
 \usepackage{fontspec}
 \setmonofont[
@@ -491,5 +492,12 @@ infer (Definitions defs) gamma (Constructor tag) =
             t <- instantiateConstructor pair
             return (Map.empty, t)
 \end{code}
+
+\subsection{Resources}
+
+\begin{enumerate}
+    \item \url{https://cseweb.ucsd.edu/classes/wi14/cse230-a/lectures/lec-inference.html}
+    \item \url{https://web.archive.org/web/20181114220414/http://dev.stephendiehl.com/fun/006_hindley_milner.html#worked-examples}
+\end{enumerate}
 
 \end{document}
