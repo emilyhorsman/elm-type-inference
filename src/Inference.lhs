@@ -323,6 +323,7 @@ constructorType :: Map.Map String Type -> Type -> [Type] -> Type
 constructorType _ resultType [] =
     resultType
 
+-- TODO: We need to handle other types here.
 constructorType typeVarMap resultType (TypeArg var : args) =
     case Map.lookup var typeVarMap of
         Nothing ->
@@ -395,6 +396,17 @@ infer defs gamma (AnonymousFunction [PatternVariable param] expr) = do
     let gamma' = assign gamma param scheme
     (unifier, t) <- infer defs gamma' expr
     return (unifier, TypeFunc (apply unifier freshTypeVariable) t)
+
+infer defs@(Definitions defsMap) gamma (AnonymousFunction [PatternConstructor tag patterns] expr) =
+    case Map.lookup tag defsMap of
+        Nothing ->
+            error $ "`" ++ tag ++ "` is not in definitions."
+
+        Just pair -> do
+            constructorType <- instantiateConstructor pair
+            (unifier, exprType) <- infer defs gamma expr
+            -- TODO: patterns should unify with constructorType
+            return (Map.empty, TypeFunc constructorType exprType)
 
 infer defs gamma (AnonymousFunction [pattern] expr) = do
     t <- inferPattern pattern

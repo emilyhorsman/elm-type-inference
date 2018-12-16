@@ -355,6 +355,24 @@ spec = do
                 snd (evalState (infer standardDefinitions emptyEnvironment expr) 0) `shouldBe`
                     Type "Maybe" [Type "Bool" []]
 
+        it "infers a very simple constructor pattern" $
+            let
+                definitions =
+                    constructDefinitions
+                        [ TypeConstructorDefinition
+                            "Bar"
+                            []
+                            [Variant "Foo" []]
+                        ]
+
+                expr =
+                    AnonymousFunction
+                        [PatternConstructor "Foo" []]
+                        (Char 'a')
+            in
+                snd (evalState (infer definitions emptyEnvironment expr) 0) `shouldBe`
+                    TypeFunc (Type "Bar" []) (Type "Char" [])
+
         it "infers a record value" $
             parseInfer "{ x = 'a', y = True }" `shouldBe`
                 RecordType (Map.fromList
