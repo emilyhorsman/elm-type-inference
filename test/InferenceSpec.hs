@@ -357,6 +357,9 @@ spec = do
                     , ("y", Type "Bool" [])
                     ])
 
+        it "infers a case expression" $
+            parseInfer "case x of True -> 'a'" `shouldBe`
+                Type "Char" []
 
     describe "constructDefinitions" $
         it "constructs a correct map" $

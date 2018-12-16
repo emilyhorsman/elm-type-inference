@@ -483,6 +483,11 @@ This means we can simply infer the type $\alpha$ of one of the branches.
 \begin{code}
 infer defs gamma (If _ trueBranch _) =
     infer defs gamma trueBranch
+
+-- TODO: The pattern could bind something which the branch expression requires
+-- to infer the type.
+infer defs gamma (Case _ ((CaseBranch _ branch) : _)) =
+    infer defs gamma branch
 \end{code}
 
 Inferring the type of a data constructor/variant usage requires looking up the variant tag in the definitions map.
