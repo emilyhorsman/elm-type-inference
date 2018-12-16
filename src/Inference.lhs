@@ -400,7 +400,7 @@ inferPattern _ gamma PatternAnything =
     (gamma,) <$> TypeArg <$> fresh
 
 inferPattern _ gamma@(Environment envMap) (PatternVariable param) =
-    -- See "does not re-instantiate type arguments with prior usage" in
+    -- See ``does not re-instantiate type arguments with prior usage'' in
     -- InferenceSpec for a test that would fail if we did not check the
     -- environment before instantiating.
     case Map.lookup (Variable param) envMap of
@@ -424,7 +424,7 @@ inferPattern defs gamma (PatternTuple patterns) =
 \end{code}
 
 Inferring a constructor involves inferring the type of the variant (data constructor) and then applying its pattern arguments to it.
-See "infers a complex constructor pattern with multiple pattern arguments" in \texttt{InferenceSpec}.
+See ``infers a complex constructor pattern with multiple pattern arguments'' in \texttt{InferenceSpec}.
 
 \begin{code}
 inferPattern defs@(Definitions defsMap) gamma (PatternConstructor tag []) =
