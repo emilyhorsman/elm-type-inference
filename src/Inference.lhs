@@ -374,11 +374,28 @@ inferPattern :: Environment -> Pattern -> TypeVariablesState (Environment, Type)
 inferPattern gamma PatternAnything =
     (gamma,) <$> TypeArg <$> fresh
 
-inferPattern gamma (PatternVariable param) = do
-    freshTypeVariable <- TypeArg <$> fresh
-    let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
-    let gamma' = assign gamma param scheme
-    return (gamma', freshTypeVariable)
+inferPattern gamma@(Environment envMap) (PatternVariable param) =
+    -- See "does not re-instantiate type arguments with prior usage" in
+    -- InferenceSpec for a test that would fail if we did not check the
+    -- environment before instantiating.
+    case Map.lookup (Variable param) envMap of
+        Nothing -> do
+            freshTypeVariable <- TypeArg <$> fresh
+            let scheme = TypeScheme { bound = Set.empty, body = freshTypeVariable }
+            let gamma' = assign gamma param scheme
+            return (gamma', freshTypeVariable)
+
+        -- Ensure that a pattern like (a, a) would not re-instantiate the second a.
+        Just (TypeScheme {body}) ->
+            return (gamma, body)
+
+inferPattern gamma (PatternTuple patterns) =
+    let
+        f :: (Environment, [Type]) -> Pattern -> TypeVariablesState (Environment, [Type])
+        f (gamma', childrenTypes) pattern =
+            second (flip (:) childrenTypes) <$> inferPattern gamma' pattern
+    in
+        second (TupleType . reverse) <$> foldM f (gamma, []) patterns
 
 inferPattern gamma pattern =
     let

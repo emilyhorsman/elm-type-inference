@@ -401,6 +401,33 @@ spec = do
                             ]
                         )
 
+        it "does not re-instantiate type arguments with prior usage" $
+            -- f (_, a, a) = (a, a)
+            let
+                expr =
+                    AnonymousFunction
+                        [PatternTuple
+                            [ PatternAnything
+                            , PatternVariable "a"
+                            , PatternVariable "a"
+                            ]
+                        ]
+                        (Tuple [Variable "a", Variable "a"])
+            in
+                snd (evalState (infer emptyDefinitions emptyEnvironment expr) 0) `shouldBe`
+                    TypeFunc
+                        (TupleType
+                            [ TypeArg "t0"
+                            , TypeArg "t1"
+                            , TypeArg "t1"
+                            ]
+                        )
+                        (TupleType
+                            [ TypeArg "t1"
+                            , TypeArg "t1"
+                            ]
+                        )
+
         it "infers a complex constructor pattern" $
             -- f : Either (Maybe a) b -> a
             -- f (Left (Just a)) = a
