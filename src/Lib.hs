@@ -469,9 +469,20 @@ typeParser :: Bool -> Parser Type
 typeParser inAnnotation =
     choice
         [ if inAnnotation then typePInAnnotation else typeP
+        , try constrainedTypeVariable
         , typeArgument
         , tupleType
         , recordType
+        ]
+
+
+constrainedTypeVariable :: Parser Type
+constrainedTypeVariable =
+    choice
+        [ ConstrainedTypeVariable Number <$ symbol "number"
+        , ConstrainedTypeVariable Appendable <$ symbol "appendable"
+        , ConstrainedTypeVariable Comparable <$ symbol "comparable"
+        , ConstrainedTypeVariable Compappend <$ symbol "compappend"
         ]
 
 

@@ -96,9 +96,8 @@ instance Typing Type where
     apply unifier (RecordType typeMap) =
         RecordType $ apply unifier <$> typeMap
 
-    -- TODO
-    apply _ _ =
-        error "Not yet implemented!"
+    apply unifier t@(ConstrainedTypeVariable _) =
+        t
 
     freeVariables (TypeArg var) =
         Set.singleton var
@@ -115,9 +114,8 @@ instance Typing Type where
     freeVariables (RecordType typeMap) =
         Set.unions $ freeVariables <$> typeMap
 
-    -- TODO
-    freeVariables _ =
-        error "Not yet implemented!"
+    freeVariables (ConstrainedTypeVariable _) =
+        Set.empty
 \end{code}
 
 The unification algorithm requires a composition operator for unifiers.
@@ -202,7 +200,12 @@ unify (Type constructor types) (Type constructor' types') =
     in
         foldl f Map.empty params
 
-unify _ _ = error "unification failure"
+unify a b@(ConstrainedTypeVariable _) =
+    unify b a
+unify (ConstrainedTypeVariable Number) (Type "Float" []) =
+    Map.empty
+
+unify a b = error $ "Unification failure between `" ++ show a ++ "` and `" ++ show b ++ "`"
 \end{code}
 
 We can now achieve a result like the following.
@@ -461,6 +464,13 @@ elmPrelude =
     Map.map (generalize (Environment Map.empty)) basicAnnotations
 
 infer :: Definitions -> Environment -> Expression -> TypeVariablesState (Unifier, Type)
+-- TODO: Is the number handling here correct?
+infer _ _ (Int _) =
+    return (Map.empty, ConstrainedTypeVariable Number)
+
+infer _ _ (Float _) =
+    return (Map.empty, Type "Float" [])
+
 -- TODO: comparable constrained type variable
 infer _ _ (Char _) =
     return (Map.empty, Type "Char" [])
@@ -627,6 +637,11 @@ infer defs gamma (RecordValue map) = do
 infer defs gamma (RecordUpdate name _) =
     -- TODO: Could the updated value refine the type?
     infer defs gamma (Variable name)
+\end{code}
+
+\begin{code}
+infer defs gamma (Negate expr) =
+    infer defs gamma (FunctionApplication (Variable "negate") expr)
 \end{code}
 
 \section{Resources}

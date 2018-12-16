@@ -130,7 +130,6 @@ data Type
     | TupleType [Type]
     | RecordType (Map.Map String Type)
     | ConstrainedTypeVariable ConstrainedTypeVariable
-    | Error
     deriving (Show, Eq, Ord)
 
 

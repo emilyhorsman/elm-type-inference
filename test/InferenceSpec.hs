@@ -507,6 +507,14 @@ spec = do
             parseInfer "case x of True -> 'a'" `shouldBe`
                 Type "Char" []
 
+        it "infers negate from elm/core/Basics" $
+            parseInfer "negate" `shouldBe`
+                TypeFunc (ConstrainedTypeVariable Number) (ConstrainedTypeVariable Number)
+
+        it "infers negate application" $ do
+            parseInfer "-4.5" `shouldBe` Type "Float" []
+            parseInfer "-4" `shouldBe` ConstrainedTypeVariable Number
+
     describe "constructDefinitions" $
         it "constructs a correct map" $
             standardDefinitions `shouldBe`
