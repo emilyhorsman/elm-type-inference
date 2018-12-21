@@ -283,6 +283,12 @@ spec = do
                     []
                     (Constructor "Nothing")
 
+        it "parses a type annotation with constrained type variables" $
+            (snd <$> parse declarationAnnotation "" "foo : number -> appendable") `shouldParse`
+                TypeFunc
+                    (ConstrainedTypeVariable Number)
+                    (ConstrainedTypeVariable Appendable)
+
     describe "anonymousFunction" $ do
         it "parses an anonymous function expression" $
             parse anonymousFunction "" "\\a -> 1" `shouldParse`
