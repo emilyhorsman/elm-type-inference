@@ -35,9 +35,10 @@
 \begin{code}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TupleSections #-}
+{-# OPTIONS -Wall #-}
 module Inference where
 
-import Control.Arrow
+import Control.Arrow (second)
 import Control.Monad.State
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -96,7 +97,7 @@ instance Typing Type where
     apply unifier (RecordType typeMap) =
         RecordType $ apply unifier <$> typeMap
 
-    apply unifier t@(ConstrainedTypeVariable _) =
+    apply _ t@(ConstrainedTypeVariable _) =
         t
 
     freeVariables (TypeArg var) =
@@ -151,6 +152,7 @@ Thus, there is no defined unifier for $a$ and $\texttt{List}\, a$ as $[a \mapsto
 Unifying $b$ and $\texttt{List}\, a$ would be fine though, this is simply $[b \mapsto \texttt{List}\, a]$.
 
 \begin{code}
+infiniteTypeErrorMessage :: String
 infiniteTypeErrorMessage =
     "Cannot unify an infinite type."
 
@@ -164,6 +166,7 @@ assignType t1@(TypeArg name) t2
 Now we can produce a unifier for two given types.
 
 \begin{code}
+differentConstructorsErrorMessage :: String
 differentConstructorsErrorMessage =
     "Cannot unify different constructors."
 
@@ -186,7 +189,7 @@ unify b a@(TypeArg _) =
 
 unify (Type constructor _) (Type constructor' _)
     | constructor /= constructor' = error differentConstructorsErrorMessage
-unify (Type constructor types) (Type constructor' types') =
+unify (Type _ types) (Type _ types') =
     let
         pairUnifier :: (Type, Type) -> Unifier
         pairUnifier =
@@ -234,9 +237,9 @@ type TypeVariablesState = State Int
 -- "t0", "t1", "t2", ...
 fresh :: TypeVariablesState String
 fresh = do
-    state <- get
-    put $ state + 1
-    return $ getFreshVarName state
+    s <- get
+    put $ s + 1
+    return $ getFreshVarName s
 \end{code}
 
 Inference time!
@@ -248,8 +251,9 @@ data TypeScheme = TypeScheme
     }
 data Environment = Environment (Map.Map Expression TypeScheme)
 
-removeKeys map keys =
-    foldr Map.delete map keys
+removeKeys :: (Foldable t, Ord k) => Map.Map k a -> t k -> Map.Map k a
+removeKeys m keys =
+    foldr Map.delete m keys
 
 instance Typing TypeScheme where
     apply unifier t@(TypeScheme {bound, body}) =
@@ -301,13 +305,13 @@ constructDefinitions :: [TypeConstructorDefinition] -> Definitions
 constructDefinitions [] =
     Definitions $ Map.empty
 
-constructDefinitions (def@(TypeConstructorDefinition _ args variants) : defs) =
+constructDefinitions (def@(TypeConstructorDefinition _ _ variants) : defs) =
     let
-        (Definitions map) = constructDefinitions defs
+        (Definitions defMap) = constructDefinitions defs
     in
         Definitions $ Map.union
             (Map.unions $ (fromVariant def) <$> variants)
-            map
+            defMap
 \end{code}
 
 Take the following Elm custom type.
@@ -353,6 +357,9 @@ constructorType typeVarMap resultType (TypeArg var : args) =
 
         Just t ->
             TypeFunc t (constructorType typeVarMap resultType args)
+
+constructorType _ _ _ =
+    error "Unimplemented constructor type!"
 \end{code}
 
 The variants in the type constructor definition don't matter, we are only instantiating fresh type variables for the type parameters of the type constructor, e.g., in \texttt{type Either a b} we have $[\texttt{a} \mapsto t_i, \texttt{b} \mapsto t_j]$.
@@ -360,7 +367,7 @@ This is being inferred from a given variant.
 
 \begin{code}
 instantiateConstructor :: (Variant, TypeConstructorDefinition) -> TypeVariablesState Type
-instantiateConstructor (Variant tag types, TypeConstructorDefinition typeName typeArgs _) = do
+instantiateConstructor (Variant _ types, TypeConstructorDefinition typeName typeArgs _) = do
     freshTypeVariableNames <- mapM (const fresh) typeArgs
     let freshTypeVariables = TypeArg <$> freshTypeVariableNames
     let resultType = Type typeName freshTypeVariables
@@ -384,6 +391,9 @@ resolveApplication (TypeFunc left right) callType =
         unifier = unify callType left
     in
         (unifier, apply unifier right)
+
+resolveApplication _ _ =
+    error "Attempted to resolve application of non-function type."
 \end{code}
 
 \texttt{resolvePatterns} takes a partially applied data constructor type and a list of patterns and essentially `calls' the data constructor at the type level.
@@ -431,7 +441,7 @@ Inferring a constructor involves inferring the type of the variant (data constru
 See ``infers a complex constructor pattern with multiple pattern arguments'' in \texttt{InferenceSpec}.
 
 \begin{code}
-inferPattern defs@(Definitions defsMap) gamma (PatternConstructor tag []) =
+inferPattern (Definitions defsMap) gamma (PatternConstructor tag []) =
     case Map.lookup tag defsMap of
         Nothing ->
             error $ "`" ++ tag ++ "` is not in definitions."
@@ -439,9 +449,9 @@ inferPattern defs@(Definitions defsMap) gamma (PatternConstructor tag []) =
         Just pair ->
             (gamma,) <$> instantiateConstructor pair
 
-inferPattern defs@(Definitions defsMap) gamma (PatternConstructor tag patterns) = do
-    (gamma', constructorType) <- inferPattern defs gamma (PatternConstructor tag [])
-    (gamma'', unifier, t) <- resolvePatterns defs (gamma', Map.empty, constructorType) patterns
+inferPattern defs gamma (PatternConstructor tag patterns) = do
+    (gamma', constructorT) <- inferPattern defs gamma (PatternConstructor tag [])
+    (gamma'', unifier, t) <- resolvePatterns defs (gamma', Map.empty, constructorT) patterns
     return (gamma'', t)
 
 inferPattern _ gamma pattern =
@@ -452,6 +462,7 @@ inferPattern _ gamma pattern =
             PatternInt _ -> "Int"
             PatternFloat _ -> "Float"
             PatternBool _ -> "Bool"
+            _ -> error "Missing pattern type in inferPattern"
     in
         return $ (gamma, Type constructor [])
 \end{code}
@@ -581,11 +592,11 @@ We assume the child type of a \texttt{List} type is inferred from its first memb
 
 \begin{code}
 -- TODO: comparable, compappend, appendable constrained type variables
-infer _ gamma (List []) = do
+infer _ _ (List []) = do
     typeArg <- TypeArg <$> fresh
     return (Map.empty, Type "List" [typeArg])
 
-infer defs gamma (List (car : cdr)) = do
+infer defs gamma (List (car : _)) = do
     (unifier, childType) <- infer defs gamma car
     return (unifier, Type "List" [childType])
 \end{code}
@@ -615,7 +626,7 @@ Inferring the type of a data constructor/variant usage requires looking up the v
 We then build a type from the variant using \texttt{instantiateConstructor}.
 
 \begin{code}
-infer (Definitions defs) gamma (Constructor tag) =
+infer (Definitions defs) _ (Constructor tag) =
     case Map.lookup tag defs of
         Nothing ->
             error $ "`" ++ tag ++ "` is not in definitions."
@@ -629,8 +640,8 @@ Record types are similar to tuples.
 There is no support for row polymorphism with records yet.
 
 \begin{code}
-infer defs gamma (RecordValue map) = do
-    typeMap <- mapM (infer defs gamma) map
+infer defs gamma (RecordValue recordMap) = do
+    typeMap <- mapM (infer defs gamma) recordMap
     let unifier = foldr (composeUnifier . fst) mempty typeMap
     return (unifier, RecordType $ Map.map snd typeMap)
 
@@ -649,7 +660,7 @@ infer defs gamma (BinOp op expr1 expr2) =
             Append ->
                 "append"
 
-            otherwise ->
+            _ ->
                 "always"
     in
         infer defs gamma $
