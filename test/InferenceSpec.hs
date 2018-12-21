@@ -515,6 +515,12 @@ spec = do
             parseInfer "-4.5" `shouldBe` Type "Float" []
             parseInfer "-4" `shouldBe` ConstrainedTypeVariable Number
 
+        it "infers append application" $ do
+            parseInfer "(\\x -> x ++ x)" `shouldBe`
+                TypeFunc
+                    (ConstrainedTypeVariable Appendable)
+                    (ConstrainedTypeVariable Appendable)
+
     describe "constructDefinitions" $
         it "constructs a correct map" $
             standardDefinitions `shouldBe`

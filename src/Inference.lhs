@@ -642,6 +642,20 @@ infer defs gamma (RecordUpdate name _) =
 \begin{code}
 infer defs gamma (Negate expr) =
     infer defs gamma (FunctionApplication (Variable "negate") expr)
+
+infer defs gamma (BinOp op expr1 expr2) =
+    let
+        func = case op of
+            Append ->
+                "append"
+
+            otherwise ->
+                "always"
+    in
+        infer defs gamma $
+            FunctionApplication
+                (FunctionApplication (Variable func) expr1)
+                expr2
 \end{code}
 
 \section{Resources}

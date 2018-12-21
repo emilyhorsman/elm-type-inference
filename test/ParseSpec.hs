@@ -576,6 +576,12 @@ spec = do
                         (BinOp Append (List []) (Variable "z"))
                     )
 
+        it "parses append" $
+            parse expression "" "(\\x -> x ++ x)" `shouldParse`
+                AnonymousFunction
+                    [PatternVariable "x"]
+                    (BinOp Append (Variable "x") (Variable "x"))
+
         it "has rightwards composition and application" $
             parse expression "" "1 |> f >> f" `shouldParse`
                 BinOp
